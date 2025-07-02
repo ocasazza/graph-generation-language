@@ -136,14 +136,17 @@ fn parse_edge_decl(pair: pest::iterators::Pair<Rule>) -> Result<EdgeDeclaration,
     let mut target = String::new();
     let mut directed = false;
     let mut attributes = HashMap::new();
+    let mut ident_count = 0;
 
     for inner_pair in pair.into_inner() {
         match inner_pair.as_rule() {
             Rule::ident => {
-                if source.is_empty() {
-                    source = inner_pair.as_str().to_string();
-                } else {
-                    target = inner_pair.as_str().to_string();
+                ident_count += 1;
+                match ident_count {
+                    1 => id = inner_pair.as_str().to_string(),
+                    2 => source = inner_pair.as_str().to_string(),
+                    3 => target = inner_pair.as_str().to_string(),
+                    _ => (),
                 }
             }
             Rule::edge_op => {
@@ -156,8 +159,13 @@ fn parse_edge_decl(pair: pest::iterators::Pair<Rule>) -> Result<EdgeDeclaration,
         }
     }
 
+    // If no explicit ID was provided, generate one
+    if id.is_empty() {
+        id = format!("e{}_{}", source, target);
+    }
+
     Ok(EdgeDeclaration {
-        id: format!("e{}_{}", source, target),
+        id,
         source,
         target,
         directed,
@@ -269,16 +277,23 @@ fn parse_attributes(pair: pest::iterators::Pair<Rule>) -> Result<HashMap<String,
 
 fn parse_value(pair: pest::iterators::Pair<Rule>) -> Result<MetadataValue, String> {
     let value_pair = pair.clone().into_inner().next().unwrap_or(pair);
-    
+
     match value_pair.as_rule() {
         Rule::string => Ok(MetadataValue::String(
             value_pair.as_str().trim_matches('"').to_string()
         )),
         Rule::number => {
             let num_str = value_pair.as_str();
-            num_str.parse::<f64>()
-                .map(MetadataValue::Number)
-                .map_err(|e| format!("Invalid number: {}", e))
+            // Try to parse as integer first, then as float
+            if num_str.contains('.') {
+                num_str.parse::<f64>()
+                    .map(MetadataValue::Float)
+                    .map_err(|e| format!("Invalid float: {}", e))
+            } else {
+                num_str.parse::<i64>()
+                    .map(MetadataValue::Integer)
+                    .map_err(|e| format!("Invalid integer: {}", e))
+            }
         }
         Rule::boolean => Ok(MetadataValue::Boolean(value_pair.as_str() == "true")),
         Rule::ident => Ok(MetadataValue::String(value_pair.as_str().to_string())),
@@ -299,10 +314,10 @@ mod tests {
                 edge e1: A -> B [weight=1.0];
             }
         "#;
-        
+
         let result = parse_ggl(input);
         assert!(result.is_ok());
-        
+
         let statements = result.unwrap();
         assert_eq!(statements.len(), 3);
     }
@@ -317,13 +332,13 @@ mod tests {
                 }
             }
         "#;
-        
+
         let result = parse_ggl(input);
         assert!(result.is_ok());
-        
+
         let statements = result.unwrap();
         assert_eq!(statements.len(), 1);
-        
+
         match &statements[0] {
             GGLStatement::GenerateStmt(gen) => {
                 assert_eq!(gen.name, "complete");
@@ -339,21 +354,21 @@ mod tests {
             graph {
                 rule add_leaf {
                     lhs { node N :intermediate; }
-                    rhs { 
+                    rhs {
                         node N :intermediate;
                         node L :leaf;
-                        edge: N -> L;
+                        N -> L;
                     }
                 }
             }
         "#;
-        
+
         let result = parse_ggl(input);
         assert!(result.is_ok());
-        
+
         let statements = result.unwrap();
         assert_eq!(statements.len(), 1);
-        
+
         match &statements[0] {
             GGLStatement::RuleDefStmt(rule) => {
                 assert_eq!(rule.name, "add_leaf");

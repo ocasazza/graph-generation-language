@@ -1,10 +1,10 @@
 use wasm_bindgen::prelude::*;
 use std::collections::HashMap;
 
-mod parser;
-mod generators;
-mod rules;
-mod types;
+pub mod parser;
+pub mod generators;
+pub mod rules;
+pub mod types;
 
 use crate::parser::{parse_ggl, GGLStatement};
 use crate::generators::get_generator;
@@ -32,9 +32,17 @@ impl GGLEngine {
     }
 
     pub fn generate_from_ggl(&mut self, ggl_code: &str) -> Result<String, JsValue> {
+        self.generate_from_ggl_native(ggl_code)
+            .map_err(|e| JsValue::from_str(&e))
+    }
+}
+
+// Native implementation for testing and non-WASM usage
+impl GGLEngine {
+    pub fn generate_from_ggl_native(&mut self, ggl_code: &str) -> Result<String, String> {
         // Parse GGL code
         let statements = parse_ggl(ggl_code)
-            .map_err(|e| JsValue::from_str(&format!("Parse error: {}", e)))?;
+            .map_err(|e| format!("Parse error: {}", e))?;
 
         // Reset graph state
         self.graph = Graph::new();
@@ -55,8 +63,8 @@ impl GGLEngine {
                 GGLStatement::GenerateStmt(gen) => {
                     if let Some(generator) = get_generator(&gen.name) {
                         let generated = generator(&gen.params)
-                            .map_err(|e| JsValue::from_str(&format!("Generator error: {}", e)))?;
-                        
+                            .map_err(|e| format!("Generator error: {}", e))?;
+
                         // Merge generated graph into current graph
                         for (_, node) in generated.nodes {
                             self.graph.add_node(node);
@@ -65,7 +73,7 @@ impl GGLEngine {
                             self.graph.add_edge(edge);
                         }
                     } else {
-                        return Err(JsValue::from_str(&format!("Unknown generator: {}", gen.name)));
+                        return Err(format!("Unknown generator: {}", gen.name));
                     }
                 }
                 GGLStatement::RuleDefStmt(rule_def) => {
@@ -79,9 +87,9 @@ impl GGLEngine {
                 GGLStatement::ApplyRuleStmt(apply) => {
                     if let Some(rule) = self.rules.get(&apply.rule_name) {
                         rule.apply(&mut self.graph, apply.iterations)
-                            .map_err(|e| JsValue::from_str(&format!("Rule application error: {}", e)))?;
+                            .map_err(|e| format!("Rule application error: {}", e))?;
                     } else {
-                        return Err(JsValue::from_str(&format!("Unknown rule: {}", apply.rule_name)));
+                        return Err(format!("Unknown rule: {}", apply.rule_name));
                     }
                 }
             }
@@ -89,7 +97,7 @@ impl GGLEngine {
 
         // Serialize final graph to JSON
         serde_json::to_string(&self.graph)
-            .map_err(|e| JsValue::from_str(&format!("Serialization error: {}", e)))
+            .map_err(|e| format!("Serialization error: {}", e))
     }
 }
 

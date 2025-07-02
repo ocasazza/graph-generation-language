@@ -5,7 +5,8 @@ use serde::{Serialize, Deserialize};
 #[serde(untagged)]
 pub enum MetadataValue {
     String(String),
-    Number(f64),
+    Integer(i64),
+    Float(f64),
     Boolean(bool),
 }
 
@@ -144,7 +145,7 @@ mod tests {
     fn test_node_builder() {
         let node = Node::new("test".to_string())
             .with_type("person".to_string())
-            .with_metadata("age".to_string(), MetadataValue::Number(30.0))
+            .with_metadata("age".to_string(), MetadataValue::Integer(30))
             .with_position(10.0, 20.0);
 
         assert_eq!(node.id, "test");
@@ -152,21 +153,21 @@ mod tests {
         assert_eq!(node.x, 10.0);
         assert_eq!(node.y, 20.0);
         assert_eq!(node.metadata.len(), 1);
-        assert!(matches!(node.metadata.get("age"), Some(MetadataValue::Number(30.0))));
+        assert!(matches!(node.metadata.get("age"), Some(MetadataValue::Integer(30))));
     }
 
     #[test]
     fn test_edge_builder() {
         let edge = Edge::new("e1".to_string(), "n1".to_string(), "n2".to_string())
             .with_type("friend".to_string())
-            .with_metadata("weight".to_string(), MetadataValue::Number(1.0));
+            .with_metadata("weight".to_string(), MetadataValue::Float(1.0));
 
         assert_eq!(edge.id, "e1");
         assert_eq!(edge.source, "n1");
         assert_eq!(edge.target, "n2");
         assert_eq!(edge.r#type, "friend");
         assert_eq!(edge.metadata.len(), 1);
-        assert!(matches!(edge.metadata.get("weight"), Some(MetadataValue::Number(1.0))));
+        assert!(matches!(edge.metadata.get("weight"), Some(MetadataValue::Float(1.0))));
     }
 
     #[test]
