@@ -17,8 +17,23 @@ impl Rule {
                 break;
             }
 
-            for m in matches {
-                self.apply_transformation(graph, &m)?;
+            // For rules that create new elements (nodes or edges) with fixed IDs,
+            // apply only one match per iteration to avoid ID conflicts.
+            // For rules that only modify existing elements, apply all matches.
+            let creates_new_elements =
+                self.rhs.nodes.iter().any(|n| !self.lhs.nodes.iter().any(|ln| ln.id == n.id)) ||
+                self.rhs.edges.iter().any(|e| !self.lhs.edges.iter().any(|le| le.id == e.id));
+
+            if creates_new_elements {
+                // Apply only the first match per iteration to avoid conflicts
+                if let Some(m) = matches.into_iter().next() {
+                    self.apply_transformation(graph, &m)?;
+                }
+            } else {
+                // Apply all matches for rules that only modify existing elements
+                for m in matches {
+                    self.apply_transformation(graph, &m)?;
+                }
             }
         }
 
@@ -29,15 +44,21 @@ impl Rule {
         let mut matches = Vec::new();
         let mut visited = HashSet::new();
 
+        // Sort node IDs to ensure deterministic iteration order
+        let mut node_ids: Vec<_> = graph.nodes.keys().collect();
+        node_ids.sort();
+
         // For each node in the graph, try to match the LHS pattern starting from it
-        for (node_id, _) in &graph.nodes {
+        for node_id in node_ids {
             if visited.contains(node_id) {
                 continue;
             }
 
             if let Some(m) = self.match_pattern_from_node(graph, node_id, &self.lhs)? {
-                // Add all matched nodes to visited set
-                visited.extend(m.node_mapping.values().cloned());
+                // Add all matched nodes to visited set to avoid overlapping matches
+                for mapped_node in m.node_mapping.values() {
+                    visited.insert(mapped_node.clone());
+                }
                 matches.push(m);
             }
         }
@@ -80,12 +101,14 @@ impl Rule {
         for pattern_node in pattern.nodes.iter().skip(1) {
             let mut found_match = false;
 
-            // Try each unmapped graph node
-            for (graph_node_id, _) in &graph.nodes {
-                if node_mapping.values().any(|v| v == graph_node_id) {
-                    continue;
-                }
+            // Sort node IDs to ensure deterministic iteration order
+            let mut available_nodes: Vec<_> = graph.nodes.keys()
+                .filter(|id| !node_mapping.values().any(|v| v == *id))
+                .collect();
+            available_nodes.sort();
 
+            // Try each unmapped graph node
+            for graph_node_id in available_nodes {
                 if self.node_matches(graph, graph_node_id, pattern_node)? {
                     node_mapping.insert(pattern_node.id.clone(), graph_node_id.clone());
                     found_match = true;
@@ -98,7 +121,7 @@ impl Rule {
             }
         }
 
-        // Match edges
+        // Match edges - but only if the pattern requires edges
         for pattern_edge in &pattern.edges {
             let mut found_match = false;
 
@@ -114,7 +137,19 @@ impl Rule {
                     continue;
                 }
 
-                if graph_edge.source == *source && graph_edge.target == *target {
+                // Since graph edges don't store directedness, we need to handle matching differently
+                // For undirected pattern edges, allow matching in either direction
+                // For directed pattern edges, only match in the specified direction
+                let matches = if pattern_edge.directed {
+                    // For directed pattern edges, exact match required
+                    graph_edge.source == *source && graph_edge.target == *target
+                } else {
+                    // For undirected pattern edges, either direction works
+                    (graph_edge.source == *source && graph_edge.target == *target) ||
+                    (graph_edge.source == *target && graph_edge.target == *source)
+                };
+
+                if matches {
                     edge_mapping.insert(pattern_edge.id.clone(), graph_edge_id.clone());
                     found_match = true;
                     break;
@@ -124,6 +159,23 @@ impl Rule {
             if !found_match {
                 return Ok(false);
             }
+        }
+
+        // Special handling for patterns that require specific connectivity constraints
+        // For single-node patterns with no edges, we need to check if isolation is required
+        // by looking at the rule context (this is a heuristic based on common rule patterns)
+        if pattern.edges.is_empty() && pattern.nodes.len() == 1 {
+            // If the RHS is empty (deletion rule), then we want isolated nodes
+            if self.rhs.nodes.is_empty() {
+                let node_id = node_mapping.values().next().unwrap();
+                // Check if this node has any edges in the graph
+                for (_, edge) in &graph.edges {
+                    if edge.source == *node_id || edge.target == *node_id {
+                        return Ok(false); // Node is not isolated
+                    }
+                }
+            }
+            // For other single-node patterns (like replacement), don't require isolation
         }
 
         Ok(true)
@@ -164,10 +216,18 @@ impl Rule {
 
             if let Some(mapped_id) = m.node_mapping.get(&node.id) {
                 // This node exists in LHS, update it
-                let mut updated_node = Node::new(mapped_id.clone());
+                let existing_node = graph.get_node(mapped_id).unwrap().clone();
+                let mut updated_node = Node::new(mapped_id.clone())
+                    .with_type(existing_node.r#type.clone())
+                    .with_metadata_map(existing_node.metadata.clone())
+                    .with_position(existing_node.x, existing_node.y);
+
+                // Update type if specified in RHS
                 if let Some(ref node_type) = node.node_type {
                     updated_node = updated_node.with_type(node_type.clone());
                 }
+
+                // Add/update metadata from RHS
                 for (key, value) in &node.attributes {
                     updated_node = updated_node.with_metadata(key.clone(), value.clone());
                 }
@@ -192,6 +252,13 @@ impl Rule {
             }
         }
 
+        // Remove edges that are in LHS but not in RHS
+        for (pattern_id, graph_id) in &m.edge_mapping {
+            if !self.rhs.edges.iter().any(|e| &e.id == pattern_id) {
+                graph.remove_edge(graph_id);
+            }
+        }
+
         // Create new edges from RHS pattern
         for edge in &self.rhs.edges {
             let source = if let Some(s) = m.node_mapping.get(&edge.source) {
@@ -206,7 +273,28 @@ impl Rule {
                 edge.target.clone()
             };
 
-            let mut new_edge = Edge::new(edge.id.clone(), source, target);
+            // Generate a unique edge ID
+            let edge_id = if let Some(mapped_id) = m.edge_mapping.get(&edge.id) {
+                // This edge exists in LHS, keep its ID
+                mapped_id.clone()
+            } else {
+                // This is a new edge, generate a unique ID
+                let base_id = if edge.id.is_empty() {
+                    format!("{}_{}", source, target)
+                } else {
+                    edge.id.clone()
+                };
+
+                let mut counter = 0;
+                let mut unique_id = base_id.clone();
+                while graph.edges.contains_key(&unique_id) {
+                    counter += 1;
+                    unique_id = format!("{}_{}", base_id, counter);
+                }
+                unique_id
+            };
+
+            let mut new_edge = Edge::new(edge_id, source, target);
             for (key, value) in &edge.attributes {
                 new_edge = new_edge.with_metadata(key.clone(), value.clone());
             }

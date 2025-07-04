@@ -290,7 +290,7 @@ mod attribute_based_tests {
 
         let mut new_attrs = HashMap::new();
         new_attrs.insert("status".to_string(), MetadataValue::String("processed".to_string()));
-        new_attrs.insert("timestamp".to_string(), MetadataValue::Number(12345.0));
+        new_attrs.insert("timestamp".to_string(), MetadataValue::Integer(12345));
 
         let rule = Rule {
             name: "process_active".to_string(),
@@ -330,7 +330,7 @@ mod attribute_based_tests {
         // Check that only active nodes were processed
         let n1 = graph.get_node("n1").unwrap();
         assert_eq!(n1.metadata.get("status"), Some(&MetadataValue::String("processed".to_string())));
-        assert_eq!(n1.metadata.get("timestamp"), Some(&MetadataValue::Number(12345.0)));
+        assert_eq!(n1.metadata.get("timestamp"), Some(&MetadataValue::Integer(12345)));
 
         let n2 = graph.get_node("n2").unwrap();
         assert_eq!(n2.metadata.get("status"), Some(&MetadataValue::String("inactive".to_string())));
@@ -338,17 +338,17 @@ mod attribute_based_tests {
 
         let n3 = graph.get_node("n3").unwrap();
         assert_eq!(n3.metadata.get("status"), Some(&MetadataValue::String("processed".to_string())));
-        assert_eq!(n3.metadata.get("timestamp"), Some(&MetadataValue::Number(12345.0)));
+        assert_eq!(n3.metadata.get("timestamp"), Some(&MetadataValue::Integer(12345)));
     }
 
     #[test]
     fn test_numeric_attribute_matching() {
         // Rule: increment counter for nodes with specific value
         let mut match_attrs = HashMap::new();
-        match_attrs.insert("counter".to_string(), MetadataValue::Number(5.0));
+        match_attrs.insert("counter".to_string(), MetadataValue::Float(5.0));
 
         let mut update_attrs = HashMap::new();
-        update_attrs.insert("counter".to_string(), MetadataValue::Number(6.0));
+        update_attrs.insert("counter".to_string(), MetadataValue::Float(6.0));
 
         let rule = Rule {
             name: "increment_counter".to_string(),
@@ -376,22 +376,22 @@ mod attribute_based_tests {
 
         let mut graph = Graph::new();
         graph.add_node(Node::new("n1".to_string())
-            .with_metadata("counter".to_string(), MetadataValue::Number(5.0)));
+            .with_metadata("counter".to_string(), MetadataValue::Float(5.0)));
         graph.add_node(Node::new("n2".to_string())
-            .with_metadata("counter".to_string(), MetadataValue::Number(3.0)));
+            .with_metadata("counter".to_string(), MetadataValue::Float(3.0)));
         graph.add_node(Node::new("n3".to_string())
-            .with_metadata("counter".to_string(), MetadataValue::Number(5.0)));
+            .with_metadata("counter".to_string(), MetadataValue::Float(5.0)));
 
         // Apply rule
         rule.apply(&mut graph, 1).unwrap();
 
         // Check that nodes with counter=5 were incremented
         assert_eq!(graph.get_node("n1").unwrap().metadata.get("counter"),
-                  Some(&MetadataValue::Number(6.0)));
+                  Some(&MetadataValue::Float(6.0)));
         assert_eq!(graph.get_node("n2").unwrap().metadata.get("counter"),
-                  Some(&MetadataValue::Number(3.0))); // Unchanged
+                  Some(&MetadataValue::Float(3.0))); // Unchanged
         assert_eq!(graph.get_node("n3").unwrap().metadata.get("counter"),
-                  Some(&MetadataValue::Number(6.0)));
+                  Some(&MetadataValue::Float(6.0)));
     }
 
     #[test]

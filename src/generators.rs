@@ -32,13 +32,6 @@ fn get_param_int(params: &HashMap<String, MetadataValue>, key: &str) -> Result<u
                 Ok(*n as usize)
             }
         }
-        Some(MetadataValue::Number(n)) => {
-            if *n < 0.0 {
-                Ok(0)
-            } else {
-                Ok(*n as usize)
-            }
-        }
         _ => Err(format!("Missing or invalid {} parameter", key)),
     }
 }

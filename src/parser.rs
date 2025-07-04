@@ -298,10 +298,16 @@ fn parse_value(pair: pest::iterators::Pair<Rule>) -> Result<MetadataValue, Strin
         )),
         Rule::number => {
             let num_str = value_pair.as_str();
-            // Parse all numbers as f64 and use the Number variant
-            num_str.parse::<f64>()
-                .map(MetadataValue::Number)
-                .map_err(|e| format!("Invalid number: {}", e))
+            // Try to parse as integer first, then as float
+            if num_str.contains('.') {
+                num_str.parse::<f64>()
+                    .map(MetadataValue::Float)
+                    .map_err(|e| format!("Invalid float: {}", e))
+            } else {
+                num_str.parse::<i64>()
+                    .map(MetadataValue::Integer)
+                    .map_err(|e| format!("Invalid integer: {}", e))
+            }
         }
         Rule::boolean => Ok(MetadataValue::Boolean(value_pair.as_str() == "true")),
         Rule::ident => Ok(MetadataValue::String(value_pair.as_str().to_string())),

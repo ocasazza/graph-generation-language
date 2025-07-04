@@ -81,13 +81,32 @@ mod lexical_tests {
         let statements = result.unwrap();
         assert_eq!(statements.len(), 6);
 
-        let expected_weights = [42.0, -17.0, 3.14159, -2.5, 0.0, 0.0];
+        #[derive(Debug)]
+        enum ExpectedWeight {
+            Integer(i64),
+            Float(f64),
+        }
+
+        let expected_weights = [
+            ExpectedWeight::Integer(42),
+            ExpectedWeight::Integer(-17),
+            ExpectedWeight::Float(3.14159),
+            ExpectedWeight::Float(-2.5),
+            ExpectedWeight::Integer(0),
+            ExpectedWeight::Float(0.0),
+        ];
+
         for (i, expected_weight) in expected_weights.iter().enumerate() {
             match &statements[i] {
                 GGLStatement::NodeDecl(node) => {
-                    match node.attributes.get("weight") {
-                        Some(MetadataValue::Number(n)) => assert_eq!(n, expected_weight),
-                        _ => panic!("Expected number weight at position {}", i),
+                    match (node.attributes.get("weight"), expected_weight) {
+                        (Some(MetadataValue::Integer(n)), ExpectedWeight::Integer(expected)) => {
+                            assert_eq!(*n, *expected);
+                        }
+                        (Some(MetadataValue::Float(n)), ExpectedWeight::Float(expected)) => {
+                            assert_eq!(*n, *expected);
+                        }
+                        _ => panic!("Expected correct number type at position {}", i),
                     }
                 }
                 _ => panic!("Expected NodeDecl at position {}", i),
@@ -235,7 +254,7 @@ mod node_declaration_tests {
                 assert_eq!(node.attributes.len(), 3);
 
                 assert_eq!(node.attributes.get("name"), Some(&MetadataValue::String("Alice".to_string())));
-                assert_eq!(node.attributes.get("age"), Some(&MetadataValue::Number(30.0)));
+                assert_eq!(node.attributes.get("age"), Some(&MetadataValue::Integer(30)));
                 assert_eq!(node.attributes.get("active"), Some(&MetadataValue::Boolean(true)));
             }
             _ => panic!("Expected NodeDecl"),
@@ -360,7 +379,7 @@ mod edge_declaration_tests {
         match &statements[0] {
             GGLStatement::EdgeDecl(edge) => {
                 assert_eq!(edge.attributes.len(), 2);
-                assert_eq!(edge.attributes.get("weight"), Some(&MetadataValue::Number(1.5)));
+                assert_eq!(edge.attributes.get("weight"), Some(&MetadataValue::Float(1.5)));
                 assert_eq!(edge.attributes.get("label"), Some(&MetadataValue::String("connection".to_string())));
             }
             _ => panic!("Expected EdgeDecl"),
@@ -418,7 +437,7 @@ mod generator_statement_tests {
             GGLStatement::GenerateStmt(gen) => {
                 assert_eq!(gen.name, "complete");
                 assert_eq!(gen.params.len(), 1);
-                assert_eq!(gen.params.get("nodes"), Some(&MetadataValue::Number(5.0)));
+                assert_eq!(gen.params.get("nodes"), Some(&MetadataValue::Integer(5)));
             }
             _ => panic!("Expected GenerateStmt"),
         }
@@ -447,8 +466,8 @@ mod generator_statement_tests {
             GGLStatement::GenerateStmt(gen) => {
                 assert_eq!(gen.name, "grid");
                 assert_eq!(gen.params.len(), 4);
-                assert_eq!(gen.params.get("rows"), Some(&MetadataValue::Number(3.0)));
-                assert_eq!(gen.params.get("cols"), Some(&MetadataValue::Number(4.0)));
+                assert_eq!(gen.params.get("rows"), Some(&MetadataValue::Integer(3)));
+                assert_eq!(gen.params.get("cols"), Some(&MetadataValue::Integer(4)));
                 assert_eq!(gen.params.get("prefix"), Some(&MetadataValue::String("node".to_string())));
                 assert_eq!(gen.params.get("periodic"), Some(&MetadataValue::Boolean(true)));
             }
