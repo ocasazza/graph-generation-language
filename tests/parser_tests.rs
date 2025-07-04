@@ -1,6 +1,5 @@
-use graph_generation_lang::parser::{parse_ggl, GGLStatement, NodeDeclaration, EdgeDeclaration, GenerateStatement, RuleDefinition, ApplyRuleStatement};
+use graph_generation_lang::parser::{parse_ggl, GGLStatement};
 use graph_generation_lang::types::MetadataValue;
-use std::collections::HashMap;
 
 #[cfg(test)]
 mod lexical_tests {

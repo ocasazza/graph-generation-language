@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
-use crate::types::{Graph, Node, Edge, MetadataValue};
-use crate::parser::{Pattern, NodeDeclaration, EdgeDeclaration};
+use crate::types::{Graph, Node, Edge};
+use crate::parser::{Pattern, NodeDeclaration};
 
 #[derive(Debug, Clone)]
 pub struct Rule {
@@ -220,6 +220,7 @@ impl Rule {
 #[derive(Debug)]
 struct Match {
     node_mapping: HashMap<String, String>,  // Pattern node ID -> Graph node ID
+    #[allow(dead_code)]
     edge_mapping: HashMap<String, String>,  // Pattern edge ID -> Graph edge ID
 }
 
@@ -227,6 +228,7 @@ struct Match {
 mod tests {
     use super::*;
     use crate::parser::{NodeDeclaration, EdgeDeclaration, Pattern};
+    use crate::types::MetadataValue;
 
     #[test]
     fn test_simple_rule() {

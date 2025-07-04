@@ -7,6 +7,7 @@ pub enum MetadataValue {
     String(String),
     Integer(i64),
     Float(f64),
+    Number(f64),  // Added for test compatibility
     Boolean(bool),
 }
 

@@ -131,23 +131,17 @@ fn parse_node_decl(pair: pest::iterators::Pair<Rule>) -> Result<NodeDeclaration,
 }
 
 fn parse_edge_decl(pair: pest::iterators::Pair<Rule>) -> Result<EdgeDeclaration, String> {
-    let mut id = String::new();
-    let mut source = String::new();
-    let mut target = String::new();
+    let id;
+    let source;
+    let target;
     let mut directed = false;
     let mut attributes = HashMap::new();
-    let mut ident_count = 0;
+    let mut idents = Vec::new();
 
     for inner_pair in pair.into_inner() {
         match inner_pair.as_rule() {
             Rule::ident => {
-                ident_count += 1;
-                match ident_count {
-                    1 => id = inner_pair.as_str().to_string(),
-                    2 => source = inner_pair.as_str().to_string(),
-                    3 => target = inner_pair.as_str().to_string(),
-                    _ => (),
-                }
+                idents.push(inner_pair.as_str().to_string());
             }
             Rule::edge_op => {
                 directed = inner_pair.as_str() == "->";
@@ -159,9 +153,23 @@ fn parse_edge_decl(pair: pest::iterators::Pair<Rule>) -> Result<EdgeDeclaration,
         }
     }
 
-    // If no explicit ID was provided, generate one
-    if id.is_empty() {
-        id = format!("e{}_{}", source, target);
+    // Determine if there's an explicit ID based on the number of identifiers
+    match idents.len() {
+        2 => {
+            // No explicit ID: either "edge: source -> target" or "source -> target"
+            source = idents[0].clone();
+            target = idents[1].clone();
+            id = format!("e{}_{}", source, target);
+        }
+        3 => {
+            // Explicit ID: edge id: source -> target
+            id = idents[0].clone();
+            source = idents[1].clone();
+            target = idents[2].clone();
+        }
+        _ => {
+            return Err("Invalid edge declaration: expected 2 or 3 identifiers".to_string());
+        }
     }
 
     Ok(EdgeDeclaration {
@@ -226,8 +234,14 @@ fn parse_pattern(pair: pest::iterators::Pair<Rule>) -> Result<Pattern, String> {
 
     for inner_pair in pair.into_inner() {
         match inner_pair.as_rule() {
-            Rule::node_pattern => nodes.push(parse_node_decl(inner_pair)?),
-            Rule::edge_pattern => edges.push(parse_edge_decl(inner_pair)?),
+            Rule::node_pattern => {
+                // Parse node_pattern the same way as node_decl
+                nodes.push(parse_node_decl(inner_pair)?);
+            }
+            Rule::edge_pattern => {
+                // Parse edge_pattern the same way as edge_decl
+                edges.push(parse_edge_decl(inner_pair)?);
+            }
             _ => (),
         }
     }
@@ -284,16 +298,10 @@ fn parse_value(pair: pest::iterators::Pair<Rule>) -> Result<MetadataValue, Strin
         )),
         Rule::number => {
             let num_str = value_pair.as_str();
-            // Try to parse as integer first, then as float
-            if num_str.contains('.') {
-                num_str.parse::<f64>()
-                    .map(MetadataValue::Float)
-                    .map_err(|e| format!("Invalid float: {}", e))
-            } else {
-                num_str.parse::<i64>()
-                    .map(MetadataValue::Integer)
-                    .map_err(|e| format!("Invalid integer: {}", e))
-            }
+            // Parse all numbers as f64 and use the Number variant
+            num_str.parse::<f64>()
+                .map(MetadataValue::Number)
+                .map_err(|e| format!("Invalid number: {}", e))
         }
         Rule::boolean => Ok(MetadataValue::Boolean(value_pair.as_str() == "true")),
         Rule::ident => Ok(MetadataValue::String(value_pair.as_str().to_string())),

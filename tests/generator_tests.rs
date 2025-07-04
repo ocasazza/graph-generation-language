@@ -1,5 +1,5 @@
 use graph_generation_lang::generators::*;
-use graph_generation_lang::types::{Graph, MetadataValue};
+use graph_generation_lang::types::MetadataValue;
 use std::collections::HashMap;
 
 #[cfg(test)]
@@ -9,7 +9,7 @@ mod complete_graph_tests {
     #[test]
     fn test_complete_graph_basic() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(5.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(5));
 
         let graph = generate_complete(&params).unwrap();
         assert_eq!(graph.node_count(), 5);
@@ -25,7 +25,7 @@ mod complete_graph_tests {
     #[test]
     fn test_complete_graph_directed() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(4.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(4));
         params.insert("directed".to_string(), MetadataValue::Boolean(true));
 
         let graph = generate_complete(&params).unwrap();
@@ -36,7 +36,7 @@ mod complete_graph_tests {
     #[test]
     fn test_complete_graph_custom_prefix() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(3));
         params.insert("prefix".to_string(), MetadataValue::String("vertex".to_string()));
 
         let graph = generate_complete(&params).unwrap();
@@ -52,7 +52,7 @@ mod complete_graph_tests {
     #[test]
     fn test_complete_graph_single_node() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(1.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(1));
 
         let graph = generate_complete(&params).unwrap();
         assert_eq!(graph.node_count(), 1);
@@ -62,7 +62,7 @@ mod complete_graph_tests {
     #[test]
     fn test_complete_graph_zero_nodes() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(0.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(0));
 
         let graph = generate_complete(&params).unwrap();
         assert_eq!(graph.node_count(), 0);
@@ -84,7 +84,7 @@ mod path_graph_tests {
     #[test]
     fn test_path_graph_basic() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(5.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(5));
 
         let graph = generate_path(&params).unwrap();
         assert_eq!(graph.node_count(), 5);
@@ -109,7 +109,7 @@ mod path_graph_tests {
     #[test]
     fn test_path_graph_single_node() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(1.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(1));
 
         let graph = generate_path(&params).unwrap();
         assert_eq!(graph.node_count(), 1);
@@ -119,7 +119,7 @@ mod path_graph_tests {
     #[test]
     fn test_path_graph_two_nodes() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(2.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(2));
 
         let graph = generate_path(&params).unwrap();
         assert_eq!(graph.node_count(), 2);
@@ -129,7 +129,7 @@ mod path_graph_tests {
     #[test]
     fn test_path_graph_custom_prefix() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(3));
         params.insert("prefix".to_string(), MetadataValue::String("step".to_string()));
 
         let graph = generate_path(&params).unwrap();
@@ -149,7 +149,7 @@ mod cycle_graph_tests {
     #[test]
     fn test_cycle_graph_basic() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(5.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(5));
 
         let graph = generate_cycle(&params).unwrap();
         assert_eq!(graph.node_count(), 5);
@@ -170,7 +170,7 @@ mod cycle_graph_tests {
     #[test]
     fn test_cycle_graph_triangle() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(3));
 
         let graph = generate_cycle(&params).unwrap();
         assert_eq!(graph.node_count(), 3);
@@ -180,7 +180,7 @@ mod cycle_graph_tests {
     #[test]
     fn test_cycle_graph_single_node() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(1.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(1));
 
         let graph = generate_cycle(&params).unwrap();
         assert_eq!(graph.node_count(), 1);
@@ -190,7 +190,7 @@ mod cycle_graph_tests {
     #[test]
     fn test_cycle_graph_two_nodes() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(2.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(2));
 
         let graph = generate_cycle(&params).unwrap();
         assert_eq!(graph.node_count(), 2);
@@ -205,8 +205,8 @@ mod grid_graph_tests {
     #[test]
     fn test_grid_graph_basic() {
         let mut params = HashMap::new();
-        params.insert("rows".to_string(), MetadataValue::Number(3.0));
-        params.insert("cols".to_string(), MetadataValue::Number(4.0));
+        params.insert("rows".to_string(), MetadataValue::Integer(3));
+        params.insert("cols".to_string(), MetadataValue::Integer(4));
 
         let graph = generate_grid(&params).unwrap();
         assert_eq!(graph.node_count(), 12); // rows * cols
@@ -222,8 +222,8 @@ mod grid_graph_tests {
     #[test]
     fn test_grid_graph_square() {
         let mut params = HashMap::new();
-        params.insert("rows".to_string(), MetadataValue::Number(3.0));
-        params.insert("cols".to_string(), MetadataValue::Number(3.0));
+        params.insert("rows".to_string(), MetadataValue::Integer(3));
+        params.insert("cols".to_string(), MetadataValue::Integer(3));
 
         let graph = generate_grid(&params).unwrap();
         assert_eq!(graph.node_count(), 9);
@@ -233,8 +233,8 @@ mod grid_graph_tests {
     #[test]
     fn test_grid_graph_periodic() {
         let mut params = HashMap::new();
-        params.insert("rows".to_string(), MetadataValue::Number(3.0));
-        params.insert("cols".to_string(), MetadataValue::Number(3.0));
+        params.insert("rows".to_string(), MetadataValue::Integer(3));
+        params.insert("cols".to_string(), MetadataValue::Integer(3));
         params.insert("periodic".to_string(), MetadataValue::Boolean(true));
 
         let graph = generate_grid(&params).unwrap();
@@ -246,8 +246,8 @@ mod grid_graph_tests {
     #[test]
     fn test_grid_graph_single_row() {
         let mut params = HashMap::new();
-        params.insert("rows".to_string(), MetadataValue::Number(1.0));
-        params.insert("cols".to_string(), MetadataValue::Number(5.0));
+        params.insert("rows".to_string(), MetadataValue::Integer(1));
+        params.insert("cols".to_string(), MetadataValue::Integer(5));
 
         let graph = generate_grid(&params).unwrap();
         assert_eq!(graph.node_count(), 5);
@@ -257,8 +257,8 @@ mod grid_graph_tests {
     #[test]
     fn test_grid_graph_single_col() {
         let mut params = HashMap::new();
-        params.insert("rows".to_string(), MetadataValue::Number(5.0));
-        params.insert("cols".to_string(), MetadataValue::Number(1.0));
+        params.insert("rows".to_string(), MetadataValue::Integer(5));
+        params.insert("cols".to_string(), MetadataValue::Integer(1));
 
         let graph = generate_grid(&params).unwrap();
         assert_eq!(graph.node_count(), 5);
@@ -268,8 +268,8 @@ mod grid_graph_tests {
     #[test]
     fn test_grid_graph_custom_prefix() {
         let mut params = HashMap::new();
-        params.insert("rows".to_string(), MetadataValue::Number(2.0));
-        params.insert("cols".to_string(), MetadataValue::Number(2.0));
+        params.insert("rows".to_string(), MetadataValue::Integer(2));
+        params.insert("cols".to_string(), MetadataValue::Integer(2));
         params.insert("prefix".to_string(), MetadataValue::String("cell".to_string()));
 
         let graph = generate_grid(&params).unwrap();
@@ -283,7 +283,7 @@ mod grid_graph_tests {
     #[test]
     fn test_grid_graph_missing_params() {
         let mut params = HashMap::new();
-        params.insert("rows".to_string(), MetadataValue::Number(3.0));
+        params.insert("rows".to_string(), MetadataValue::Integer(3));
         // Missing cols parameter
 
         let result = generate_grid(&params);
@@ -298,7 +298,7 @@ mod star_graph_tests {
     #[test]
     fn test_star_graph_basic() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(6.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(6));
 
         let graph = generate_star(&params).unwrap();
         assert_eq!(graph.node_count(), 6);
@@ -323,7 +323,7 @@ mod star_graph_tests {
     #[test]
     fn test_star_graph_directed() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(4.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(4));
         params.insert("directed".to_string(), MetadataValue::Boolean(true));
 
         let graph = generate_star(&params).unwrap();
@@ -344,7 +344,7 @@ mod star_graph_tests {
     #[test]
     fn test_star_graph_single_node() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(1.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(1));
 
         let graph = generate_star(&params).unwrap();
         assert_eq!(graph.node_count(), 1);
@@ -354,7 +354,7 @@ mod star_graph_tests {
     #[test]
     fn test_star_graph_two_nodes() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(2.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(2));
 
         let graph = generate_star(&params).unwrap();
         assert_eq!(graph.node_count(), 2);
@@ -369,8 +369,8 @@ mod tree_graph_tests {
     #[test]
     fn test_tree_graph_basic() {
         let mut params = HashMap::new();
-        params.insert("branching".to_string(), MetadataValue::Number(2.0));
-        params.insert("depth".to_string(), MetadataValue::Number(3.0));
+        params.insert("branching".to_string(), MetadataValue::Integer(2));
+        params.insert("depth".to_string(), MetadataValue::Integer(3));
 
         let graph = generate_tree(&params).unwrap();
 
@@ -385,8 +385,8 @@ mod tree_graph_tests {
     #[test]
     fn test_tree_graph_ternary() {
         let mut params = HashMap::new();
-        params.insert("branching".to_string(), MetadataValue::Number(3.0));
-        params.insert("depth".to_string(), MetadataValue::Number(2.0));
+        params.insert("branching".to_string(), MetadataValue::Integer(3));
+        params.insert("depth".to_string(), MetadataValue::Integer(2));
 
         let graph = generate_tree(&params).unwrap();
 
@@ -398,8 +398,8 @@ mod tree_graph_tests {
     #[test]
     fn test_tree_graph_depth_zero() {
         let mut params = HashMap::new();
-        params.insert("branching".to_string(), MetadataValue::Number(2.0));
-        params.insert("depth".to_string(), MetadataValue::Number(0.0));
+        params.insert("branching".to_string(), MetadataValue::Integer(2));
+        params.insert("depth".to_string(), MetadataValue::Integer(0));
 
         let graph = generate_tree(&params).unwrap();
         assert_eq!(graph.node_count(), 1); // Just root
@@ -409,8 +409,8 @@ mod tree_graph_tests {
     #[test]
     fn test_tree_graph_depth_one() {
         let mut params = HashMap::new();
-        params.insert("branching".to_string(), MetadataValue::Number(4.0));
-        params.insert("depth".to_string(), MetadataValue::Number(1.0));
+        params.insert("branching".to_string(), MetadataValue::Integer(4));
+        params.insert("depth".to_string(), MetadataValue::Integer(1));
 
         let graph = generate_tree(&params).unwrap();
         assert_eq!(graph.node_count(), 1); // Just root (depth 1 means no children)
@@ -420,8 +420,8 @@ mod tree_graph_tests {
     #[test]
     fn test_tree_graph_custom_prefix() {
         let mut params = HashMap::new();
-        params.insert("branching".to_string(), MetadataValue::Number(2.0));
-        params.insert("depth".to_string(), MetadataValue::Number(2.0));
+        params.insert("branching".to_string(), MetadataValue::Integer(2));
+        params.insert("depth".to_string(), MetadataValue::Integer(2));
         params.insert("prefix".to_string(), MetadataValue::String("tree".to_string()));
 
         let graph = generate_tree(&params).unwrap();
@@ -436,7 +436,7 @@ mod tree_graph_tests {
     #[test]
     fn test_tree_graph_missing_params() {
         let mut params = HashMap::new();
-        params.insert("branching".to_string(), MetadataValue::Number(2.0));
+        params.insert("branching".to_string(), MetadataValue::Integer(2));
         // Missing depth parameter
 
         let result = generate_tree(&params);
@@ -451,8 +451,8 @@ mod barabasi_albert_tests {
     #[test]
     fn test_barabasi_albert_basic() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(10.0));
-        params.insert("edges_per_node".to_string(), MetadataValue::Number(2.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(10));
+        params.insert("edges_per_node".to_string(), MetadataValue::Integer(2));
 
         let graph = generate_barabasi_albert(&params).unwrap();
         assert_eq!(graph.node_count(), 10);
@@ -465,8 +465,8 @@ mod barabasi_albert_tests {
     #[test]
     fn test_barabasi_albert_minimal() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.0));
-        params.insert("edges_per_node".to_string(), MetadataValue::Number(1.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(3));
+        params.insert("edges_per_node".to_string(), MetadataValue::Integer(1));
 
         let graph = generate_barabasi_albert(&params).unwrap();
         assert_eq!(graph.node_count(), 3);
@@ -476,8 +476,8 @@ mod barabasi_albert_tests {
     #[test]
     fn test_barabasi_albert_equal_m_and_n() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.0));
-        params.insert("edges_per_node".to_string(), MetadataValue::Number(3.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(3));
+        params.insert("edges_per_node".to_string(), MetadataValue::Integer(3));
 
         let result = generate_barabasi_albert(&params);
         assert!(result.is_err()); // Should fail when m >= n
@@ -486,8 +486,8 @@ mod barabasi_albert_tests {
     #[test]
     fn test_barabasi_albert_custom_prefix() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(5.0));
-        params.insert("edges_per_node".to_string(), MetadataValue::Number(2.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(5));
+        params.insert("edges_per_node".to_string(), MetadataValue::Integer(2));
         params.insert("prefix".to_string(), MetadataValue::String("ba".to_string()));
 
         let graph = generate_barabasi_albert(&params).unwrap();
@@ -501,7 +501,7 @@ mod barabasi_albert_tests {
     #[test]
     fn test_barabasi_albert_missing_params() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(5.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(5));
         // Missing edges_per_node parameter
 
         let result = generate_barabasi_albert(&params);
@@ -545,19 +545,19 @@ mod generator_registry_tests {
             let mut params = HashMap::new();
             match gen_name {
                 "complete" | "path" | "cycle" | "star" => {
-                    params.insert("nodes".to_string(), MetadataValue::Number(3.0));
+                    params.insert("nodes".to_string(), MetadataValue::Integer(3));
                 }
                 "grid" => {
-                    params.insert("rows".to_string(), MetadataValue::Number(2.0));
-                    params.insert("cols".to_string(), MetadataValue::Number(2.0));
+                    params.insert("rows".to_string(), MetadataValue::Integer(2));
+                    params.insert("cols".to_string(), MetadataValue::Integer(2));
                 }
                 "tree" => {
-                    params.insert("branching".to_string(), MetadataValue::Number(2.0));
-                    params.insert("depth".to_string(), MetadataValue::Number(2.0));
+                    params.insert("branching".to_string(), MetadataValue::Integer(2));
+                    params.insert("depth".to_string(), MetadataValue::Integer(2));
                 }
                 "barabasi_albert" => {
-                    params.insert("nodes".to_string(), MetadataValue::Number(5.0));
-                    params.insert("edges_per_node".to_string(), MetadataValue::Number(2.0));
+                    params.insert("nodes".to_string(), MetadataValue::Integer(5));
+                    params.insert("edges_per_node".to_string(), MetadataValue::Integer(2));
                 }
                 _ => unreachable!(),
             }
@@ -586,7 +586,7 @@ mod parameter_validation_tests {
     #[test]
     fn test_boolean_parameters() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(3));
         params.insert("directed".to_string(), MetadataValue::String("not_a_bool".to_string()));
 
         // Should use default value for invalid boolean
@@ -597,8 +597,8 @@ mod parameter_validation_tests {
     #[test]
     fn test_string_parameters() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.0));
-        params.insert("prefix".to_string(), MetadataValue::Number(123.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(3));
+        params.insert("prefix".to_string(), MetadataValue::Integer(123));
 
         // Should convert number to string or use default
         let result = generate_complete(&params);
@@ -608,7 +608,7 @@ mod parameter_validation_tests {
     #[test]
     fn test_negative_numbers() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(-5.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(-5));
 
         // Negative numbers should be handled (likely converted to 0)
         let result = generate_complete(&params);
@@ -621,7 +621,7 @@ mod parameter_validation_tests {
     #[test]
     fn test_fractional_numbers() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.7));
+        params.insert("nodes".to_string(), MetadataValue::Float(3.7));
 
         let result = generate_complete(&params);
         assert!(result.is_ok(), "Should handle fractional numbers");
@@ -639,7 +639,7 @@ mod graph_properties_tests {
     fn test_graph_connectivity() {
         // Test that generated graphs have expected connectivity properties
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(5.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(5));
 
         let complete_graph = generate_complete(&params).unwrap();
         let path_graph = generate_path(&params).unwrap();
@@ -658,7 +658,7 @@ mod graph_properties_tests {
     #[test]
     fn test_node_naming_consistency() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(3));
         params.insert("prefix".to_string(), MetadataValue::String("test".to_string()));
 
         let graph = generate_complete(&params).unwrap();
@@ -673,7 +673,7 @@ mod graph_properties_tests {
     #[test]
     fn test_edge_properties() {
         let mut params = HashMap::new();
-        params.insert("nodes".to_string(), MetadataValue::Number(3.0));
+        params.insert("nodes".to_string(), MetadataValue::Integer(3));
 
         let graph = generate_complete(&params).unwrap();
 

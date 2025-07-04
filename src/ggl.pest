@@ -3,7 +3,7 @@ WHITESPACE = _{ " " | "\t" | "\r" | "\n" }
 COMMENT = _{ "//" ~ (!"\n" ~ ANY)* | "/*" ~ (!"*/" ~ ANY)* ~ "*/" }
 
 // Identifiers and literals
-ident = @{ ASCII_ALPHA ~ (ASCII_ALPHANUMERIC | "_")* }
+ident = @{ (ASCII_ALPHA | "_") ~ (ASCII_ALPHANUMERIC | "_")* }
 string = @{ "\"" ~ (!"\"" ~ ANY)* ~ "\"" }
 number = @{ ("+" | "-")? ~ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT*)? }
 boolean = @{ "true" | "false" }
@@ -31,7 +31,7 @@ generate_stmt = { "generate" ~ ident ~ "{" ~ param_list ~ "}" }
 
 // Rule patterns
 node_pattern = { "node" ~ ident ~ node_type? ~ attributes? ~ ";" }
-edge_pattern = { ident ~ edge_op ~ ident ~ attributes? ~ ";" }
+edge_pattern = { ("edge" ~ ident? ~ ":")? ~ ident ~ edge_op ~ ident ~ attributes? ~ ";" }
 pattern = { "{" ~ (node_pattern | edge_pattern)* ~ "}" }
 
 // Rule definition

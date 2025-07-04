@@ -18,8 +18,27 @@ pub fn get_generator(name: &str) -> Option<GeneratorFn> {
 
 fn get_param_int(params: &HashMap<String, MetadataValue>, key: &str) -> Result<usize, String> {
     match params.get(key) {
-        Some(MetadataValue::Integer(n)) => Ok(*n as usize),
-        Some(MetadataValue::Float(n)) => Ok(*n as usize),
+        Some(MetadataValue::Integer(n)) => {
+            if *n < 0 {
+                Ok(0)
+            } else {
+                Ok(*n as usize)
+            }
+        }
+        Some(MetadataValue::Float(n)) => {
+            if *n < 0.0 {
+                Ok(0)
+            } else {
+                Ok(*n as usize)
+            }
+        }
+        Some(MetadataValue::Number(n)) => {
+            if *n < 0.0 {
+                Ok(0)
+            } else {
+                Ok(*n as usize)
+            }
+        }
         _ => Err(format!("Missing or invalid {} parameter", key)),
     }
 }
@@ -41,7 +60,7 @@ fn get_param_bool(params: &HashMap<String, MetadataValue>, key: &str, default: b
 pub fn generate_complete(params: &HashMap<String, MetadataValue>) -> Result<Graph, String> {
     let n = get_param_int(params, "nodes")?;
     let prefix = get_param_string(params, "prefix", "n");
-    let directed = get_param_bool(params, "directed", false);
+    let _directed = get_param_bool(params, "directed", false);
 
     let mut graph = Graph::new();
 
@@ -53,7 +72,7 @@ pub fn generate_complete(params: &HashMap<String, MetadataValue>) -> Result<Grap
 
     // Add edges (all-to-all)
     for i in 0..n {
-        for j in (if directed { 0 } else { i + 1 })..n {
+        for j in (if _directed { 0 } else { i + 1 })..n {
             if i != j {
                 let source = format!("{}{}", prefix, i);
                 let target = format!("{}{}", prefix, j);
@@ -69,7 +88,7 @@ pub fn generate_complete(params: &HashMap<String, MetadataValue>) -> Result<Grap
 pub fn generate_path(params: &HashMap<String, MetadataValue>) -> Result<Graph, String> {
     let n = get_param_int(params, "nodes")?;
     let prefix = get_param_string(params, "prefix", "n");
-    let directed = get_param_bool(params, "directed", false);
+    let _directed = get_param_bool(params, "directed", false);
 
     let mut graph = Graph::new();
 
@@ -93,7 +112,7 @@ pub fn generate_path(params: &HashMap<String, MetadataValue>) -> Result<Graph, S
 pub fn generate_cycle(params: &HashMap<String, MetadataValue>) -> Result<Graph, String> {
     let n = get_param_int(params, "nodes")?;
     let prefix = get_param_string(params, "prefix", "n");
-    let directed = get_param_bool(params, "directed", false);
+    let _directed = get_param_bool(params, "directed", false);
 
     let mut graph = Graph::new();
 
