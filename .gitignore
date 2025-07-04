@@ -1,2 +1,10 @@
 target/
 pkg/
+
+# Nix
+result
+result-*
+.direnv/
+
+# Documentation builds
+docs/build/

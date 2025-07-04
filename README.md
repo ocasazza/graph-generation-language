@@ -14,10 +14,43 @@ A domain-specific language for creating and manipulating graphs through declarat
 
 ### Installation
 
+#### Option 1: Using Nix (Recommended)
+
+If you have [Nix](https://nixos.org/download.html) and [direnv](https://direnv.net/) installed:
+
+```bash
+git clone https://github.com/ocasazza/graph-generation-language.git
+cd graph-generation-language
+direnv allow  # This will automatically set up the development environment
+```
+
+The Nix flake provides a complete development environment with:
+- Rust toolchain with WASM support
+- Python with Sphinx for documentation
+- All necessary build tools
+- Custom build scripts
+
+Available commands in the Nix environment:
+- `build` - Build the Rust project
+- `build-wasm` - Build WASM target
+- `test` - Run all tests
+- `check` - Run cargo check
+- `fmt` - Format code
+- `clippy` - Run clippy linter
+- `docs` - Build documentation
+- `docs-serve` - Build and serve docs locally
+
+#### Option 2: Manual Installation
+
 ```bash
 git clone https://github.com/ocasazza/graph-generation-language.git
 cd graph-generation-language
 cargo build --release
+```
+
+For documentation building, you'll also need:
+```bash
+pip install -r docs/requirements.txt
 ```
 
 ### Basic Example
@@ -110,6 +143,7 @@ See [EXAMPLES.md](EXAMPLES.md) for comprehensive examples including social netwo
 
 ## Documentation
 
+- **[Nix Development Environment](NIX_SETUP.md)**: Complete setup guide for Nix and direnv
 - **[Examples & Usage Guide](EXAMPLES.md)**: Comprehensive examples and patterns
 - **[Test Documentation](tests/README.md)**: Test structure and examples
 
