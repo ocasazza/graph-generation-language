@@ -1,0 +1,22 @@
+# Ignore source TypeScript files, not needed in the packaged extension
+src/
+
+# TypeScript configuration
+tsconfig.json
+
+# Standard development files/folders
+node_modules/
+.vscode/
+.git/
+.gitignore
+*.vsix
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional: if language server is built elsewhere and copied in,
+# you might ignore its source or intermediate build artifacts here too.
+# For now, assuming the server binary will be handled by CI/CD steps
+# or manually placed if bundled.
+# ../ggl-language-server/src
+# ../ggl-language-server/target (if not bundling the server binary directly)

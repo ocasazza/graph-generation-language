@@ -1,0 +1,43 @@
+{
+  "name": "ggl-language",
+  "displayName": "GGL Language Support",
+  "description": "Syntax highlighting for the Graph Generation Language (GGL)",
+  "version": "0.0.1",
+  "publisher": "ggl-user",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "activationEvents": [
+    "onLanguage:ggl"
+  ],
+  "main": "./out/extension.js",
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "@types/node": "latest",
+    "typescript": "^5.0.0"
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "contributes": {
+    "languages": [{
+      "id": "ggl",
+      "aliases": ["GGL", "ggl"],
+      "extensions": [".ggl"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "ggl",
+      "scopeName": "source.ggl",
+      "path": "./syntaxes/ggl.tmLanguage.json"
+    }]
+  }
+}

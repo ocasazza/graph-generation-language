@@ -1,0 +1,106 @@
+name: VSCode Extension CI/CD
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ggl-vscode-extension/**'
+      - '.github/workflows/rust_ci.yml' # If rust_ci changes, might need to rebuild extension
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'ggl-vscode-extension/**'
+  workflow_run: # Trigger when the Rust CI workflow completes successfully on main
+    workflows: ["Rust Language Server CI"]
+    types:
+      - completed
+    branches: [main]
+
+
+jobs:
+  build_and_package_extension:
+    name: Build and Package GGL VSCode Extension
+    runs-on: ubuntu-latest
+    # Only run this job if the triggering event was a push to main,
+    # or if the workflow_run event was successful
+    if: |
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18' # Or your preferred LTS version
+        cache: 'npm'
+        cache-dependency-path: ggl-vscode-extension/package-lock.json
+
+    - name: Download Language Server Executable (Linux)
+      uses: actions/download-artifact@v4
+      with:
+        name: ggl-language-server-linux # Must match artifact name from rust_ci.yml
+        # If triggered by workflow_run, use the artifact from that run
+        # Otherwise, try to find an artifact from the same commit (more complex, might need specific action or API call)
+        # For simplicity, this example assumes the artifact is available from a related run.
+        # A more robust solution for non-workflow_run triggers might involve finding the latest successful artifact from main.
+        # For workflow_run, run_id is available:
+        run_id: ${{ github.event.workflow_run.id }}
+        path: ./ggl-language-server-artifact # Download to a temporary directory
+      # This step will only run effectively if triggered by workflow_run or if an artifact with this name
+      # from a relevant workflow run (e.g., same commit SHA) is found.
+      # If not triggered by workflow_run, you might need a different strategy to get the server artifact,
+      # or ensure rust_ci always runs first for the same commit.
+
+    - name: Prepare Language Server for Packaging
+      run: |
+        mkdir -p ggl-vscode-extension/server
+        cp ./ggl-language-server-artifact/ggl-language-server ggl-vscode-extension/server/ggl-language-server
+        chmod +x ggl-vscode-extension/server/ggl-language-server
+        echo "Language server executable copied and made executable."
+        ls -la ggl-vscode-extension/server/ # Verify
+
+    - name: Install Extension Dependencies
+      working-directory: ./ggl-vscode-extension
+      run: npm ci # Use npm ci for cleaner installs in CI
+
+    - name: Compile Extension TypeScript
+      working-directory: ./ggl-vscode-extension
+      # This assumes npm install correctly sets up node_modules/.bin/tsc
+      # Given sandbox issues, this might fail here too, but is standard practice.
+      run: npm run compile
+
+    - name: Install vsce (VSCode Extension Packager)
+      run: npm install -g @vscode/vsce
+
+    - name: Package Extension (.vsix)
+      working-directory: ./ggl-vscode-extension
+      run: vsce package --yarn # Use --yarn if you used yarn, otherwise it's fine for npm projects too. Or remove if not needed.
+      # vsce package will read .vscodeignore
+      # Output will be something like <name>-<version>.vsix
+
+    - name: Upload .vsix Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ggl-vscode-extension-vsix
+        path: ggl-vscode-extension/*.vsix # Path to the generated .vsix file
+        if-no-files-found: error
+        retention-days: 7
+
+    # Optional: Publish to Marketplace or GitHub Releases
+    # - name: Publish to VSCode Marketplace
+    #   if: startsWith(github.ref, 'refs/tags/') # Example: only publish on tags
+    #   working-directory: ./ggl-vscode-extension
+    #   run: vsce publish -p $VSCE_PAT
+    #   env:
+    #     VSCE_PAT: ${{ secrets.VSCE_PAT }} # Personal Access Token for publishing
+
+    # - name: Publish to GitHub Releases
+    #   if: startsWith(github.ref, 'refs/tags/')
+    #   uses: softprops/action-gh-release@v1
+    #   with:
+    #     files: ggl-vscode-extension/*.vsix
+    #   env:
+    #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

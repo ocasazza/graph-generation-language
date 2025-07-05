@@ -1,0 +1,66 @@
+name: Rust Language Server CI
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'ggl-language-server/**'
+      - 'src/ggl.pest' # Grammar file
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'ggl-language-server/**'
+      - 'src/ggl.pest'
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build_and_test_server:
+    name: Build and Test GGL Language Server
+    runs-on: ubuntu-latest # Using Linux for now
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Rust toolchain
+      uses: actions-rust-lang/setup-rust-toolchain@v1
+      with:
+        toolchain: stable # Or your specific Rust version
+
+    - name: Cache Cargo dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cargo/bin/
+          ~/.cargo/registry/index/
+          ~/.cargo/registry/cache/
+          ~/.cargo/git/db/
+          ggl-language-server/target/
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-
+
+    - name: Run Clippy (Lint)
+      working-directory: ./ggl-language-server
+      run: cargo clippy -- -D warnings # Fail on warnings
+
+    - name: Run Tests
+      working-directory: ./ggl-language-server
+      run: cargo test --verbose
+
+    - name: Build Release Executable
+      working-directory: ./ggl-language-server
+      run: cargo build --release --verbose
+
+    - name: Upload Linux Executable Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ggl-language-server-linux # Artifact name
+        path: ggl-language-server/target/release/ggl-language-server # Path to the executable
+        if-no-files-found: error # Fail if the executable is not found
+        retention-days: 7 # How long to keep the artifact
+      # Note: For Windows, it would be ggl-language-server.exe
+      # For macOS, it would be ggl-language-server (no extension)
+      # A matrix build strategy would be needed for cross-platform executables.

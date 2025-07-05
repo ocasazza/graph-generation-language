@@ -1,0 +1,108 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "GGL",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#keywords" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#booleans" },
+    { "include": "#identifiers" },
+    { "include": "#operators" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.ggl",
+          "match": "//.*"
+        },
+        {
+          "name": "comment.block.ggl",
+          "begin": "/\\*",
+          "end": "\\*/",
+          "patterns": [
+            { "include": "#comments" }
+          ]
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.ggl",
+          "match": "\\b(graph|node|edge|generate|rule|lhs|rhs|apply|times)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "name": "string.quoted.double.ggl",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [
+        {
+          "name": "constant.character.escape.ggl",
+          "match": "\\\\."
+        }
+      ]
+    },
+    "numbers": {
+      "name": "constant.numeric.ggl",
+      "match": "\\b([+-])?\\d+(\\.\\d*)?\\b"
+    },
+    "booleans": {
+      "name": "constant.language.boolean.ggl",
+      "match": "\\b(true|false)\\b"
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "name": "entity.name.type.ggl",
+          "match": ":\\s*([a-zA-Z_][a-zA-Z0-9_]*)"
+        },
+        {
+          "name": "variable.other.ggl",
+          "match": "\\b[a-zA-Z_][a-zA-Z0-9_]*\\b"
+        }
+      ]
+    },
+    "operators": {
+      "name": "keyword.operator.ggl",
+      "match": "->|--"
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.attribute.begin.ggl",
+          "match": "\\["
+        },
+        {
+          "name": "punctuation.definition.attribute.end.ggl",
+          "match": "\\]"
+        },
+        {
+          "name": "punctuation.definition.block.begin.ggl",
+          "match": "\\{"
+        },
+        {
+          "name": "punctuation.definition.block.end.ggl",
+          "match": "\\}"
+        },
+        {
+          "name": "punctuation.separator.comma.ggl",
+          "match": ","
+        },
+        {
+          "name": "punctuation.terminator.statement.ggl",
+          "match": ";"
+        },
+        {
+          "name": "punctuation.separator.key-value.ggl",
+          "match": "="
+        }
+      ]
+    }
+  },
+  "scopeName": "source.ggl"
+}
