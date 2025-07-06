@@ -5,9 +5,9 @@ permissions:
   contents: write
 
 on:
-  push:
-    branches:
-      - main
+  release:
+    types: [published]
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
   # Release unpublished packages
