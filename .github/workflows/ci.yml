@@ -1,9 +1,5 @@
 name: "Continuous Integration and Deployment"
-on:
-  # Run only when pushing to master branch, and making PRs
-  push:
-    branches: ["main", "dev"]
-  pull_request:
+on: "push"
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
@@ -19,6 +15,7 @@ jobs:
 
   docs:
     needs: ci
+    if: github.ref == 'refs/heads/main'
     permissions:
       pages: write
       id-token: write
