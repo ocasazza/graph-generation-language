@@ -11,7 +11,7 @@ run *ARGS:
 
 # Run 'bacon' to run the project (auto-recompiles)
 watch *ARGS:
-	bacon --job run -- -- {{ ARGS }}
+    bacon --job run -- -- {{ ARGS }}
 
 # Run all tests
 test *ARGS:
@@ -30,11 +30,11 @@ test-coverage:
     cargo test --all-features
 
 # Serve WASM demo with Trunk (development server with hot reload)
-serve:
+serve-wasm:
     cd examples/basic && trunk serve
 
 # Build WASM for production with Trunk
-build:
+build-wasm:
     cd examples/basic && trunk build --release
 
 # Clean Trunk build artifacts
