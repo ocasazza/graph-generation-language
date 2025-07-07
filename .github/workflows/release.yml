@@ -1,5 +1,7 @@
 name: "Release"
 on:
+  pull_request:
+    branches: ["main"]
   push:
     branches: ["main"]
   workflow_dispatch:
@@ -17,49 +19,24 @@ on:
 
 jobs:
   # Trigger CI and wait for it to complete (unless skipped)
-  trigger-and-wait-ci:
-    runs-on: ubuntu-latest
+  ci:
     if: ${{ !inputs.skip_ci }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-14]
     steps:
-      - name: Trigger CI workflow
-        id: trigger-ci
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const branch = context.eventName === 'workflow_dispatch'
-              ? context.payload.inputs.branch
-              : context.ref.replace('refs/heads/', '');
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Install omnix
+        run: nix --accept-flake-config profile install "github:juspay/omnix"
+      - run: om ci
 
-            const response = await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: 'ci.yml',
-              ref: branch
-            });
-            console.log(`Triggered CI workflow on branch: ${branch}`);
-            return response;
-
-      - name: Wait for CI to complete
-        uses: lewagon/wait-on-check-action@v1.3.1
-        with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/heads/{0}', inputs.branch) || github.ref }}
-          check-name: 'ci'
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          wait-interval: 10
-          allowed-conclusions: success
-
-  # Dummy job for when CI is skipped
-  skip-ci:
-    runs-on: ubuntu-latest
-    if: ${{ inputs.skip_ci }}
-    steps:
-      - name: CI skipped
-        run: echo "CI check was skipped by user request"
 
   # Build and deploy documentation
   docs:
-    needs: [trigger-and-wait-ci, skip-ci]
-    if: ${{ always() && (needs.trigger-and-wait-ci.result == 'success' || needs.skip-ci.result == 'success') }}
+    needs: ci
+    if: ${{ needs.ci.result == 'success' }}
     permissions:
       pages: write
       id-token: write
@@ -104,8 +81,8 @@ jobs:
 
   # Create release PR with version updates and changelog
   release-plz-pr:
-    needs: [trigger-and-wait-ci, skip-ci]
-    if: ${{ always() && (needs.trigger-and-wait-ci.result == 'success' || needs.skip-ci.result == 'success') }}
+    needs: ci
+    if: ${{ needs.ci.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -132,8 +109,8 @@ jobs:
 
   # Release unpublished packages
   release-plz-release:
-    needs: [trigger-and-wait-ci, skip-ci]
-    if: ${{ always() && (needs.trigger-and-wait-ci.result == 'success' || needs.skip-ci.result == 'success') }}
+    needs: ci
+    if: ${{ needs.ci.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
