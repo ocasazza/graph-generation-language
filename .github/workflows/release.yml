@@ -1,0 +1,108 @@
+name: "Release"
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  # Wait for CI to complete successfully
+  wait-for-ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Wait for CI to complete
+        uses: lewagon/wait-on-check-action@v1.3.1
+        with:
+          ref: ${{ github.ref }}
+          check-name: 'ci'
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          wait-interval: 10
+
+  # Build and deploy documentation
+  docs:
+    needs: wait-for-ci
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Configure GitHub pages
+        id: pages
+        uses: actions/configure-pages@v5
+
+      - name: Cargo doc
+        # We pass --document-private-items and --document-hidden items to ensure
+        # that documentation always builds even for these items. This makes
+        # future changes to make those items public/non-hidden more painless.
+        # Note that --document-hidden-items is unstable; if a future release
+        # breaks or removes it, we can just update CI to no longer pass that
+        # flag.
+        # METADATA_DOCS_RS_RUSTDOC_ARGS='--cfg doc_cfg --generate-link-to-definition'
+        # export RUSTDOCFLAGS="-Z unstable-options --document-hidden-items $METADATA_DOCS_RS_RUSTDOC_ARGS"
+        run: cargo doc --document-private-items --package graph_generation_language --all-features
+
+      - name: Add HTML redirect to doc root
+        # By default, Rustdoc doesn't redirect to the documentation root, so we
+        # manually generate a redirect.
+        run: echo '<meta http-equiv="refresh" content="0;url=graph_generation_language/index.html">' > target/doc/index.html
+
+      - name: Upload Cargo doc output to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/doc
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+  # Create release PR with version updates and changelog
+  release-plz-pr:
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    concurrency:
+      group: release-plz-${{ github.ref }}
+      cancel-in-progress: false
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  # Release unpublished packages
+  release-plz-release:
+    needs: wait-for-ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: DeterminateSystems/nix-installer-action@main
+
+      - name: Run release-plz
+        uses: release-plz/action@v0.5
+        with:
+          command: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
