@@ -84,13 +84,10 @@ use std::collections::HashMap;
 #[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
 
-#[cfg(feature = "wasm")]
-use wee_alloc;
-
-// Use `wee_alloc` as the global allocator for smaller WASM binary size
-#[cfg(feature = "wasm")]
-#[global_allocator]
-static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
+// // Use `wee_alloc` as the global allocator for smaller WASM binary size
+// #[cfg(feature = "wasm")]
+// #[global_allocator]
+// static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 pub mod generators;
 pub mod parser;
