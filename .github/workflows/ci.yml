@@ -6,6 +6,8 @@ on:
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
+    # simple strategy for this workflow, we run this on all branches [except main]
+    # see release for the full release testing matrix
     strategy:
       matrix:
         os: [ubuntu-latest, macos-14]
