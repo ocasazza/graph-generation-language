@@ -16,11 +16,30 @@ on:
         type: boolean
 
 jobs:
-  # Wait for CI to complete successfully (unless skipped)
-  wait-for-ci:
+  # Trigger CI and wait for it to complete (unless skipped)
+  trigger-and-wait-ci:
     runs-on: ubuntu-latest
     if: ${{ !inputs.skip_ci }}
     steps:
+      - name: Trigger CI workflow
+        id: trigger-ci
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const branch = context.eventName === 'workflow_dispatch'
+              ? context.payload.inputs.branch
+              : context.ref.replace('refs/heads/', '');
+
+            const response = await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci.yml',
+              ref: branch
+            });
+
+            console.log(`Triggered CI workflow on branch: ${branch}`);
+            return response;
+
       - name: Wait for CI to complete
         uses: lewagon/wait-on-check-action@v1.3.1
         with:
@@ -28,6 +47,7 @@ jobs:
           check-name: 'ci'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
+          allowed-conclusions: success
 
   # Dummy job for when CI is skipped
   skip-ci:
@@ -39,8 +59,8 @@ jobs:
 
   # Build and deploy documentation
   docs:
-    needs: [wait-for-ci, skip-ci]
-    if: ${{ always() && (needs.wait-for-ci.result == 'success' || needs.skip-ci.result == 'success') }}
+    needs: [trigger-and-wait-ci, skip-ci]
+    if: ${{ always() && (needs.trigger-and-wait-ci.result == 'success' || needs.skip-ci.result == 'success') }}
     permissions:
       pages: write
       id-token: write
@@ -85,8 +105,8 @@ jobs:
 
   # Create release PR with version updates and changelog
   release-plz-pr:
-    needs: [wait-for-ci, skip-ci]
-    if: ${{ always() && (needs.wait-for-ci.result == 'success' || needs.skip-ci.result == 'success') }}
+    needs: [trigger-and-wait-ci, skip-ci]
+    if: ${{ always() && (needs.trigger-and-wait-ci.result == 'success' || needs.skip-ci.result == 'success') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -113,8 +133,8 @@ jobs:
 
   # Release unpublished packages
   release-plz-release:
-    needs: [wait-for-ci, skip-ci]
-    if: ${{ always() && (needs.wait-for-ci.result == 'success' || needs.skip-ci.result == 'success') }}
+    needs: [trigger-and-wait-ci, skip-ci]
+    if: ${{ always() && (needs.trigger-and-wait-ci.result == 'success' || needs.skip-ci.result == 'success') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
