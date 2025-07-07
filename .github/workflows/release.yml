@@ -80,7 +80,7 @@ jobs:
   # Create release PR with version updates and changelog
   release-plz-pr:
     # needs: ci
-    if: ${{ needs.ci.result == 'success' }}
+    # if: ${{ needs.ci.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -109,7 +109,7 @@ jobs:
   # Release unpublished packages
   release-plz-release:
     # needs: ci
-    if: ${{ needs.ci.result == 'success' }}
+    # if: ${{ needs.ci.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
