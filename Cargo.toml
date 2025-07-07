@@ -10,7 +10,6 @@ homepage = "https://ocasazza.github.io/graph-generation-language/"
 documentation = "https://ocasazza.github.io/graph-generation-language/"
 readme = "README.md"
 keywords = ["nix", "documentation", "rust"]
-include = ["src/**/*", "ggl.pest", "Cargo.toml"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
