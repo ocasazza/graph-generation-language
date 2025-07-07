@@ -20,7 +20,7 @@ jobs:
         - macos-latest
         - macos-14
         - macos-15
-        - macos-13
+        # - macos-13
         # - windows-latest
         # - windows-2025
         # - windows-2022
@@ -85,6 +85,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      workflows: write
+
     concurrency:
       group: release-plz-${{ github.ref }}
       cancel-in-progress: false
