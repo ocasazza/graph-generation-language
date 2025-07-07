@@ -36,7 +36,6 @@ jobs:
               workflow_id: 'ci.yml',
               ref: branch
             });
-
             console.log(`Triggered CI workflow on branch: ${branch}`);
             return response;
 
