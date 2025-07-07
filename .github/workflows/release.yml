@@ -85,7 +85,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      workflows: write
+      actions: write
+      # workflows: write
 
     concurrency:
       group: release-plz-${{ github.ref }}
