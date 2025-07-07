@@ -2,23 +2,45 @@ name: "Release"
 on:
   push:
     branches: ["main"]
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to release from'
+        required: true
+        default: 'main'
+        type: string
+      skip_ci:
+        description: 'Skip waiting for CI to complete'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
-  # Wait for CI to complete successfully
+  # Wait for CI to complete successfully (unless skipped)
   wait-for-ci:
     runs-on: ubuntu-latest
+    if: ${{ !inputs.skip_ci }}
     steps:
       - name: Wait for CI to complete
         uses: lewagon/wait-on-check-action@v1.3.1
         with:
-          ref: ${{ github.ref }}
+          ref: ${{ github.event_name == 'workflow_dispatch' && format('refs/heads/{0}', inputs.branch) || github.ref }}
           check-name: 'ci'
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
 
+  # Dummy job for when CI is skipped
+  skip-ci:
+    runs-on: ubuntu-latest
+    if: ${{ inputs.skip_ci }}
+    steps:
+      - name: CI skipped
+        run: echo "CI check was skipped by user request"
+
   # Build and deploy documentation
   docs:
-    needs: wait-for-ci
+    needs: [wait-for-ci, skip-ci]
+    if: ${{ always() && (needs.wait-for-ci.result == 'success' || needs.skip-ci.result == 'success') }}
     permissions:
       pages: write
       id-token: write
@@ -28,6 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref }}
       - uses: DeterminateSystems/nix-installer-action@main
 
       - name: Configure GitHub pages
@@ -61,18 +85,20 @@ jobs:
 
   # Create release PR with version updates and changelog
   release-plz-pr:
-    needs: wait-for-ci
+    needs: [wait-for-ci, skip-ci]
+    if: ${{ always() && (needs.wait-for-ci.result == 'success' || needs.skip-ci.result == 'success') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write
     concurrency:
-      group: release-plz-${{ github.ref }}
+      group: release-plz-${{ github.event_name == 'workflow_dispatch' && format('refs/heads/{0}', inputs.branch) || github.ref }}
       cancel-in-progress: false
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref }}
           fetch-depth: 0
 
       - uses: DeterminateSystems/nix-installer-action@main
@@ -87,7 +113,8 @@ jobs:
 
   # Release unpublished packages
   release-plz-release:
-    needs: wait-for-ci
+    needs: [wait-for-ci, skip-ci]
+    if: ${{ always() && (needs.wait-for-ci.result == 'success' || needs.skip-ci.result == 'success') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -95,6 +122,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.branch || github.ref }}
           fetch-depth: 0
 
       - uses: DeterminateSystems/nix-installer-action@main
