@@ -161,7 +161,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
 
       - name: Build WASM package
-        run: nix develop --command just build-wasm-bundler
+        run: nix develop --command just build-wasm
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
