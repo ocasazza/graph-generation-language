@@ -2,8 +2,7 @@ name: "Continuous Integration and Deployment"
 on:
   # Run only when pushing to master branch, and making PRs
   push:
-    branches:
-      - main
+    branches: ["main", "dev"]
   pull_request:
 jobs:
   ci:
