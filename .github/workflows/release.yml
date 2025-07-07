@@ -33,49 +33,67 @@ jobs:
   #     - run: om ci
 
 
-  # # Build and deploy documentation
-  # docs:
-  #   needs: ci
-  #   if: ${{ needs.ci.result == 'success' }}
-  #   permissions:
-  #     pages: write
-  #     id-token: write
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: DeterminateSystems/nix-installer-action@main
+  # Build and deploy documentation and WASM demo
+  pages:
+    # needs: ci
+    # if: ${{ needs.ci.result == 'success' }}
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
 
-  #     - name: Configure GitHub pages
-  #       id: pages
-  #       uses: actions/configure-pages@v5
+      - name: Configure GitHub pages
+        id: pages
+        uses: actions/configure-pages@v5
 
-  #     - name: Cargo doc
-  #       # We pass --document-private-items and --document-hidden items to ensure
-  #       # that documentation always builds even for these items. This makes
-  #       # future changes to make those items public/non-hidden more painless.
-  #       # Note that --document-hidden-items is unstable; if a future release
-  #       # breaks or removes it, we can just update CI to no longer pass that
-  #       # flag.
-  #       # METADATA_DOCS_RS_RUSTDOC_ARGS='--cfg doc_cfg --generate-link-to-definition'
-  #       # export RUSTDOCFLAGS="-Z unstable-options --document-hidden-items $METADATA_DOCS_RS_RUSTDOC_ARGS"
-  #       run: cargo doc --document-private-items --package graph_generation_language --all-features
+      - name: Install Trunk
+        run: cargo install trunk
 
-  #     - name: Add HTML redirect to doc root
-  #       # By default, Rustdoc doesn't redirect to the documentation root, so we
-  #       # manually generate a redirect.
-  #       run: echo '<meta http-equiv="refresh" content="0;url=graph_generation_language/index.html">' > target/doc/index.html
+      - name: Add wasm32 target
+        run: rustup target add wasm32-unknown-unknown
 
-  #     - name: Upload Cargo doc output to GitHub Pages
-  #       uses: actions/upload-pages-artifact@v3
-  #       with:
-  #         path: target/doc
+      - name: Build Rust documentation
+        # We pass --document-private-items and --document-hidden items to ensure
+        # that documentation always builds even for these items. This makes
+        # future changes to make those items public/non-hidden more painless.
+        # Note that --document-hidden-items is unstable; if a future release
+        # breaks or removes it, we can just update CI to no longer pass that
+        # flag.
+        # METADATA_DOCS_RS_RUSTDOC_ARGS='--cfg doc_cfg --generate-link-to-definition'
+        # export RUSTDOCFLAGS="-Z unstable-options --document-hidden-items $METADATA_DOCS_RS_RUSTDOC_ARGS"
+        run: cargo doc --document-private-items --package graph_generation_language --all-features
 
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v4
+      - name: Build WASM demo
+        run: |
+          cd examples/basic
+          trunk build --release
+
+      - name: Prepare GitHub Pages content
+        run: |
+          # Create demo directory in docs output
+          mkdir -p target/doc/demo
+
+          # Copy WASM demo files to demo subdirectory
+          cp -r examples/basic/dist/* target/doc/demo/
+
+          # Copy the GitHub Pages index template
+          cp .github/pages-index.html target/doc/index.html
+
+      - name: Upload GitHub Pages content
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/doc
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   # Create release PR with version updates and changelog
   release-plz-pr:
@@ -132,7 +150,8 @@ jobs:
   # Build and publish WASM package to npm
   wasm-npm-publish:
     runs-on: ubuntu-latest
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # needs: ci
+    # if: ${{ needs.ci.result == 'success' }}
     permissions:
       contents: read
     steps:
