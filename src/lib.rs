@@ -80,7 +80,17 @@
 //! * [`rules`] - Transformation rule engine for graph manipulation
 
 use std::collections::HashMap;
+
+#[cfg(feature = "wasm")]
 use wasm_bindgen::prelude::*;
+
+#[cfg(feature = "wasm")]
+use wee_alloc;
+
+// Use `wee_alloc` as the global allocator for smaller WASM binary size
+#[cfg(feature = "wasm")]
+#[global_allocator]
+static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 
 pub mod generators;
 pub mod parser;
@@ -95,6 +105,7 @@ use crate::types::{Edge, Graph, Node};
 ///
 /// This function should be called once when initializing the WASM module to ensure
 /// that panics are properly reported to the JavaScript console.
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 pub fn set_panic_hook() {
     console_error_panic_hook::set_once();
@@ -122,7 +133,7 @@ pub fn set_panic_hook() {
 /// let result = engine.generate_from_ggl_native(ggl_code).unwrap();
 /// println!("Generated graph: {}", result);
 /// ```
-#[wasm_bindgen]
+#[cfg_attr(feature = "wasm", wasm_bindgen)]
 pub struct GGLEngine {
     graph: Graph,
     rules: HashMap<String, rules::Rule>,
@@ -134,6 +145,7 @@ impl Default for GGLEngine {
     }
 }
 
+#[cfg(feature = "wasm")]
 #[wasm_bindgen]
 impl GGLEngine {
     /// Creates a new GGL engine with an empty graph and no rules.
@@ -195,8 +207,25 @@ impl GGLEngine {
     }
 }
 
-/// Native implementation for testing and non-WASM usage
+/// Implementation for both WASM and native usage
 impl GGLEngine {
+    /// Creates a new GGL engine with an empty graph and no rules.
+    ///
+    /// # Examples
+    ///
+    /// ```rust
+    /// use graph_generation_language::GGLEngine;
+    ///
+    /// let engine = GGLEngine::new();
+    /// ```
+    #[cfg(not(feature = "wasm"))]
+    pub fn new() -> Self {
+        GGLEngine {
+            graph: Graph::new(),
+            rules: HashMap::new(),
+        }
+    }
+
     /// Parses and executes a GGL program, returning the resulting graph as JSON.
     ///
     /// This is the native Rust version that returns standard Rust error types.
@@ -332,7 +361,7 @@ impl GGLEngine {
 }
 
 // Initialize panic hook
-#[wasm_bindgen(start)]
+#[cfg(all(feature = "wasm", not(test)))]
 pub fn main() {
     set_panic_hook();
 }

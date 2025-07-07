@@ -17,3 +17,10 @@ jobs:
       - name: Install omnix
         run: nix --accept-flake-config profile install "github:juspay/omnix"
       - run: om ci
+
+      # Test WASM build on Ubuntu only to avoid redundancy
+      - name: Test WASM build
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          nix develop --command just build-wasm
+          nix develop --command just test-wasm

@@ -4,3 +4,9 @@
 .direnv
 
 /.pre-commit-config.yaml
+
+# WASM build artifacts (Trunk)
+/dist
+examples/basic/target/
+examples/basic/dist/
+examples/basic/pkg/

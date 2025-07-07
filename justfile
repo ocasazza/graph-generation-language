@@ -28,3 +28,16 @@ test-file FILE *ARGS:
 # Run tests with coverage
 test-coverage:
     cargo test --all-features
+
+# Serve WASM demo with Trunk (development server with hot reload)
+serve:
+    cd examples/basic && trunk serve
+
+# Build WASM for production with Trunk
+build:
+    cd examples/basic && trunk build --release
+
+# Clean Trunk build artifacts
+clean:
+    cd examples/basic && trunk clean
+    rm -rf examples/basic/dist
