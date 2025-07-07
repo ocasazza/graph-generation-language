@@ -181,7 +181,7 @@ dependencies = [
 
 [[package]]
 name = "graph_generation_language"
-version = "0.0.1"
+version = "0.0.2"
 dependencies = [
  "clap",
  "console_error_panic_hook",
