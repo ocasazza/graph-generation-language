@@ -136,7 +136,7 @@ jobs:
       - uses: DeterminateSystems/nix-installer-action@main
 
       - name: Build WASM package
-        run: nix develop -c "just build-wasm"
+        run: nix develop -c "wasm-pack build --target web"
 
       - name: Run release-plz
         uses: release-plz/action@v0.5
