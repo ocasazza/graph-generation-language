@@ -29,6 +29,10 @@ test-file FILE *ARGS:
 test-coverage:
     cargo test --all-features
 
+# build
+build:
+    cargo build --profile release
+
 # Build WASM for production with Trunk
 build-wasm:
     wasm-pack build --target web
@@ -36,4 +40,4 @@ build-wasm:
 # Clean Trunk build artifacts
 clean:
     cd examples/trunk && trunk clean
-    rm -rf examples/trunk/dist
+    rm -rf examples/trunk/dist examples/trunk/target dist pkg

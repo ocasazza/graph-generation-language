@@ -31,6 +31,8 @@ jobs:
   #     - name: Install omnix
   #       run: nix --accept-flake-config profile install "github:juspay/omnix"
   #     - run: om ci
+  #     - run: nix develop -c "wasm-pack test --target web"
+  #     - run: nix develop -c "wasm-pack build --target web"
 
 
   # Build and deploy documentation and WASM demo
@@ -52,12 +54,6 @@ jobs:
       - name: Configure GitHub pages
         id: pages
         uses: actions/configure-pages@v5
-
-      - name: Install Trunk
-        run: cargo install trunk
-
-      - name: Add wasm32 target
-        run: rustup target add wasm32-unknown-unknown
 
       - name: Build Rust documentation
         # We pass --document-private-items and --document-hidden items to ensure
