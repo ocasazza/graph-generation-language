@@ -16,7 +16,7 @@ mod basic_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(
             result.is_ok(),
             "Failed to process simple node declarations: {:?}",
@@ -59,7 +59,7 @@ mod basic_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -92,7 +92,7 @@ mod basic_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -112,7 +112,7 @@ mod basic_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -143,7 +143,7 @@ mod generator_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -177,7 +177,7 @@ mod generator_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -207,7 +207,7 @@ mod generator_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -238,7 +238,7 @@ mod generator_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -263,7 +263,7 @@ mod generator_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -290,7 +290,7 @@ mod generator_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -317,7 +317,7 @@ mod generator_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_err());
 
         let error_msg = result.err().unwrap();
@@ -336,7 +336,7 @@ mod generator_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_err());
     }
 }
@@ -366,7 +366,7 @@ mod mixed_content_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -410,7 +410,7 @@ mod mixed_content_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -463,7 +463,7 @@ mod mixed_content_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -515,7 +515,7 @@ mod rule_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -563,7 +563,7 @@ mod rule_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -594,7 +594,7 @@ mod rule_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -629,7 +629,7 @@ mod rule_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -664,7 +664,7 @@ mod rule_integration_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -695,7 +695,7 @@ mod error_handling_tests {
         ];
 
         for program in invalid_programs {
-            let result = engine.generate_from_ggl_native(program);
+            let result = engine.generate_from_ggl(program);
             assert!(result.is_err(), "Expected error for program: {}", program);
         }
     }
@@ -711,7 +711,7 @@ mod error_handling_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_err());
     }
 
@@ -725,7 +725,7 @@ mod error_handling_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_err());
     }
 
@@ -740,7 +740,7 @@ mod error_handling_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_err());
 
         let error_msg = result.err().unwrap();
@@ -760,7 +760,7 @@ mod error_handling_tests {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_err());
     }
 }
@@ -800,7 +800,7 @@ mod real_world_scenarios {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -858,7 +858,7 @@ mod real_world_scenarios {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -907,7 +907,7 @@ mod real_world_scenarios {
             }
         "#;
 
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         assert!(result.is_ok());
 
         let json_str = result.unwrap();
@@ -947,7 +947,7 @@ mod performance_tests {
         "#;
 
         let start = std::time::Instant::now();
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         let duration = start.elapsed();
 
         assert!(result.is_ok());
@@ -983,7 +983,7 @@ mod performance_tests {
         "#;
 
         let start = std::time::Instant::now();
-        let result = engine.generate_from_ggl_native(ggl_code);
+        let result = engine.generate_from_ggl(ggl_code);
         let duration = start.elapsed();
 
         assert!(result.is_ok());
