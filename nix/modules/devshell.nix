@@ -25,6 +25,7 @@
           # Browser testing tools
           chromedriver
           geckodriver
+          wasm-pack
         ];
         shellHook = ''
           # Install WASM target if not already installed
