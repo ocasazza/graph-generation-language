@@ -35,5 +35,5 @@ build-wasm:
 
 # Clean Trunk build artifacts
 clean:
-    cd examples/basic && trunk clean
-    rm -rf examples/basic/dist
+    cd examples/trunk && trunk clean
+    rm -rf examples/trunk/dist

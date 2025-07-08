@@ -72,7 +72,7 @@ jobs:
 
       - name: Build WASM demo
         run: |
-          cd examples/basic
+          cd examples/trunk
           trunk build --release
 
       - name: Prepare GitHub Pages content
@@ -81,7 +81,7 @@ jobs:
           mkdir -p target/doc/demo
 
           # Copy WASM demo files to demo subdirectory
-          cp -r examples/basic/dist/* target/doc/demo/
+          cp -r examples/trunk/dist/* target/doc/demo/
 
           # Copy the GitHub Pages index template
           cp .github/pages-index.html target/doc/index.html

@@ -7,8 +7,8 @@
 
 # WASM build artifacts (Trunk)
 /dist
-examples/basic/target/
-examples/basic/dist/
-examples/basic/pkg/
+examples/trunk/target/
+examples/trunk/dist/
+examples/trunk/pkg/
 examples/
 pkg
