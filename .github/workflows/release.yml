@@ -135,8 +135,14 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Build WASM package
-        run: nix develop -c "wasm-pack build --target web"
+      # test WASM build on Ubuntu only to avoid redundancy
+      # todo: we might be able to just integrate this in with om ci
+      - name: Test WASM Demo
+        run: |
+          nix develop --command just build-wasm
+
+      # - name: Build WASM package
+      #   run: wasm-pack build --target web
 
       - name: Run release-plz
         uses: release-plz/action@v0.5
