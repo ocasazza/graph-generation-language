@@ -19,24 +19,31 @@ name = "ggl"
 path = "src/main.rs"
 
 
-# WASM-specific package metadata
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = ["-Oz", "--enable-mutable-globals"]
-
-[package.metadata.wasm-pack.profile.dev]
-wasm-opt = false
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
 
 [features]
-default = []
 wasm = [
-  "wasm-bindgen",
-  "js-sys",
-  "web-sys",
+  "dep:js-sys",
+  "dep:web-sys",
   "console_error_panic_hook",
-  "wee_alloc",
+  "dep:wasm-bindgen",
 ]
+default = ["console_error_panic_hook"]
 
 [dependencies]
+# WASM dependencies - available when targeting wasm32 or when wasm feature is enabled
+wasm-bindgen = { version = "0.2.84", features = [
+  "serde-serialize",
+], optional = true }
+
+# The `console_error_panic_hook` crate provides better debugging of panics by
+# logging them with `console.error`. This is great for development, but requires
+# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
+# code size when deploying.
+console_error_panic_hook = { version = "0.1.7", optional = true }
+
 # Core dependencies (always included)
 clap = { version = "4.3.14", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -46,12 +53,7 @@ pest_derive = "2.8"
 rand = { version = "0.8", features = ["small_rng"] }
 getrandom = { version = "0.2", features = ["js", "wasm-bindgen"] }
 
-# WASM-specific dependencies (optional)
-wasm-bindgen = { version = "0.2", features = [
-  "serde-serialize",
-], optional = true }
-console_error_panic_hook = { version = "0.1", optional = true }
-wee_alloc = { version = "0.4", optional = true }
+# WASM-specific dependencies
 js-sys = { version = "0.3", optional = true }
 web-sys = { version = "0.3", optional = true, features = [
   "console",
@@ -62,5 +64,14 @@ web-sys = { version = "0.3", optional = true, features = [
   "Text",
 ] }
 
-[dev-dependencies]
-wasm-bindgen-test = "0.3"
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "0.2.84", features = ["serde-serialize"] }
+js-sys = { version = "0.3" }
+web-sys = { version = "0.3", features = [
+  "console",
+  "Window",
+  "Document",
+  "Element",
+  "HtmlElement",
+  "Text",
+] }

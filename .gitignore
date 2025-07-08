@@ -10,3 +10,5 @@
 examples/basic/target/
 examples/basic/dist/
 examples/basic/pkg/
+examples/
+pkg

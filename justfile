@@ -1,5 +1,5 @@
 default:
-    @just --list
+    just --list
 
 # Run pre-commit hooks on all files, including autoformatting
 pre-commit-all:
@@ -29,13 +29,9 @@ test-file FILE *ARGS:
 test-coverage:
     cargo test --all-features
 
-# Serve WASM demo with Trunk (development server with hot reload)
-serve-wasm:
-    cd examples/basic && trunk serve
-
 # Build WASM for production with Trunk
 build-wasm:
-    cd examples/basic && trunk build --release
+    wasm-pack build --target web
 
 # Clean Trunk build artifacts
 clean:
