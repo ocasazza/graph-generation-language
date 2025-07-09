@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <title>Graph Generation Language - Trunk Demo</title>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🌐 Graph Generation Language - WASM Demo</h1>
+    <textarea id="ggl-input">
+graph social_network {
+  // Define nodes with types and attributes
+  node alice :person [name="Alice", age=30];
+  node bob :person [name="Bob", age=25];
+  node charlie :person [name="Charlie", age=35];
+
+  // Create relationships
+  edge friendship: alice -- bob [strength=0.8];
+  edge friendship: bob -- charlie [strength=0.6];
+  edge friendship: alice -- charlie [strength=0.9];
+
+  // Generate additional structure
+  generate complete {
+      nodes: 3;
+      prefix: "user";
+  }
+}
+      </textarea>
+    <div>
+      <button id="generate-btn">🚀 Generate Graph</button>
+      <button id="clear-btn">🗑️ Clear</button>
+      <button id="format-btn">✨ Format JSON</button>
+    </div>
+    <div id="output" class="output">Click "Generate Graph" to see the result...</div>
+  </div>
+
+  <div class="demo-section">
+    <h2>📚 Example Templates</h2>
+    <div class="examples" id="examples"></div>
+  </div>
+  </div>
+
+  <link data-trunk rel="rust" />
+  <script type="module">
+    import { greet } from "./hello_world";
+
+    greet("World!");
+  </script>
+</body>
+
+</html>

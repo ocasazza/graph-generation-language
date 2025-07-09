@@ -9,18 +9,69 @@ repository = "https://github.com/ocasazza/graph-generation-language"
 homepage = "https://ocasazza.github.io/graph-generation-language/"
 documentation = "https://ocasazza.github.io/graph-generation-language/"
 readme = "README.md"
-keywords = ["nix", "documentation", "rust"]
+keywords = ["graph", "dsl", "wasm", "javascript", "typescript"]
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 
+[[bin]]
+name = "ggl"
+path = "src/main.rs"
+
+
+[profile.release]
+# Tell `rustc` to optimize for small code size.
+opt-level = "s"
+
+[features]
+wasm = [
+  "dep:js-sys",
+  "dep:web-sys",
+  "console_error_panic_hook",
+  "dep:wasm-bindgen",
+]
+default = ["console_error_panic_hook"]
+
 [dependencies]
+# WASM dependencies - available when targeting wasm32 or when wasm feature is enabled
+wasm-bindgen = { version = "0.2.84", features = [
+  "serde-serialize",
+], optional = true }
+
+# The `console_error_panic_hook` crate provides better debugging of panics by
+# logging them with `console.error`. This is great for development, but requires
+# all the `std::fmt` and `std::panicking` infrastructure, so isn't great for
+# code size when deploying.
+console_error_panic_hook = { version = "0.1.7", optional = true }
+
+# Core dependencies (always included)
 clap = { version = "4.3.14", features = ["derive"] }
-wasm-bindgen = "0.2"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 pest = "2.8"
 pest_derive = "2.8"
 rand = { version = "0.8", features = ["small_rng"] }
 getrandom = { version = "0.2", features = ["js", "wasm-bindgen"] }
-console_error_panic_hook = "0.1"
+
+# WASM-specific dependencies
+js-sys = { version = "0.3", optional = true }
+web-sys = { version = "0.3", optional = true, features = [
+  "console",
+  "Window",
+  "Document",
+  "Element",
+  "HtmlElement",
+  "Text",
+] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = { version = "0.2.84", features = ["serde-serialize"] }
+js-sys = { version = "0.3" }
+web-sys = { version = "0.3", features = [
+  "console",
+  "Window",
+  "Document",
+  "Element",
+  "HtmlElement",
+  "Text",
+] }

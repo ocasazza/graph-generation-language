@@ -3,84 +3,93 @@ on:
   pull_request:
     branches: ["main"]
   push:
-    branches: ["main"]
+    branches: ["main", "wasm"]
 
 jobs:
-  # # Run CI tests
-  # ci:
-  #   runs-on: ${{ matrix.os }}
-  #   strategy:
-  #     matrix:
-  #       os:
-  #       - ubuntu-latest
-  #       - ubuntu-24.04
-  #       - ubuntu-22.04
-  #       - ubuntu-22.04-arm
-  #       - ubuntu-24.04-arm
-  #       - macos-latest
-  #       - macos-14
-  #       - macos-15
-  #       # - macos-13
-  #       # - windows-latest
-  #       # - windows-2025
-  #       # - windows-2022
-  #       # - windows-11-arm
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: DeterminateSystems/nix-installer-action@main
-  #     - name: Install omnix
-  #       run: nix --accept-flake-config profile install "github:juspay/omnix"
-  #     - run: om ci
+  ci:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os:
+        - ubuntu-latest
+        # - ubuntu-24.04
+        # - ubuntu-22.04
+        # - ubuntu-22.04-arm
+        # - ubuntu-24.04-arm
+        - macos-latest
+        # - macos-14
+        # - macos-15
+        # - macos-13
+        # - windows-latest
+        # - windows-2025
+        # - windows-2022
+        # - windows-11-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Install omnix
+        run: nix --accept-flake-config profile install "github:juspay/omnix"
+      - run: om ci
+      - run: nix develop --command just build-wasm
 
+  pages:
+    needs: ci
+    if: ${{ needs.ci.result == 'success' && github.event_name == 'pull_request' }}
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
 
-  # # Build and deploy documentation
-  # docs:
-  #   needs: ci
-  #   if: ${{ needs.ci.result == 'success' }}
-  #   permissions:
-  #     pages: write
-  #     id-token: write
-  #   environment:
-  #     name: github-pages
-  #     url: ${{ steps.deployment.outputs.page_url }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: DeterminateSystems/nix-installer-action@main
+      - name: Configure GitHub pages
+        id: pages
+        uses: actions/configure-pages@v5
 
-  #     - name: Configure GitHub pages
-  #       id: pages
-  #       uses: actions/configure-pages@v5
+      - name: Build Rust documentation
+        # We pass --document-private-items and --document-hidden items to ensure
+        # that documentation always builds even for these items. This makes
+        # future changes to make those items public/non-hidden more painless.
+        # Note that --document-hidden-items is unstable; if a future release
+        # breaks or removes it, we can just update CI to no longer pass that
+        # flag.
+        # METADATA_DOCS_RS_RUSTDOC_ARGS='--cfg doc_cfg --generate-link-to-definition'
+        # export RUSTDOCFLAGS="-Z unstable-options --document-hidden-items $METADATA_DOCS_RS_RUSTDOC_ARGS"
+        run: cargo doc --document-private-items --package graph_generation_language --all-features
 
-  #     - name: Cargo doc
-  #       # We pass --document-private-items and --document-hidden items to ensure
-  #       # that documentation always builds even for these items. This makes
-  #       # future changes to make those items public/non-hidden more painless.
-  #       # Note that --document-hidden-items is unstable; if a future release
-  #       # breaks or removes it, we can just update CI to no longer pass that
-  #       # flag.
-  #       # METADATA_DOCS_RS_RUSTDOC_ARGS='--cfg doc_cfg --generate-link-to-definition'
-  #       # export RUSTDOCFLAGS="-Z unstable-options --document-hidden-items $METADATA_DOCS_RS_RUSTDOC_ARGS"
-  #       run: cargo doc --document-private-items --package graph_generation_language --all-features
+      - name: Build WASM demo
+        run: |
+          cd examples/trunk
+          trunk build --release
 
-  #     - name: Add HTML redirect to doc root
-  #       # By default, Rustdoc doesn't redirect to the documentation root, so we
-  #       # manually generate a redirect.
-  #       run: echo '<meta http-equiv="refresh" content="0;url=graph_generation_language/index.html">' > target/doc/index.html
+      - name: Prepare GitHub Pages content
+        run: |
+          # Create demo directory in docs output
+          mkdir -p target/doc/demo
 
-  #     - name: Upload Cargo doc output to GitHub Pages
-  #       uses: actions/upload-pages-artifact@v3
-  #       with:
-  #         path: target/doc
+          # Copy WASM demo files to demo subdirectory
+          cp -r examples/trunk/dist/* target/doc/demo/
 
-  #     - name: Deploy to GitHub Pages
-  #       id: deployment
-  #       uses: actions/deploy-pages@v4
+          # Copy the GitHub Pages index template
+          cp .github/pages-index.html target/doc/index.html
+
+      - name: Upload GitHub Pages content
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: target/doc
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
 
   # Create release PR with version updates and changelog
-  release-plz-pr:
-    # needs: ci
-    # if: ${{ needs.ci.result == 'success' }}
+  release-pr:
+    needs: ci
+    if: ${{ needs.ci.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -107,12 +116,12 @@ jobs:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
   # Release unpublished packages
-  release-plz-release:
-    # needs: ci
-    # if: ${{ needs.ci.result == 'success' }}
+  release:
+    needs: ci
+    if: ${{ needs.ci.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: "write"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -121,10 +130,48 @@ jobs:
 
       - uses: DeterminateSystems/nix-installer-action@main
 
+      # test WASM build on Ubuntu only to avoid redundancy
+      # todo: we might be able to just integrate this in with om ci
+      - name: Test WASM Demo
+        run: |
+          nix develop --command just build-wasm
+
       - name: Run release-plz
+        id: release-plz
         uses: release-plz/action@v0.5
         with:
           command: release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Read release output and publish npm package
+        if: steps.release-plz.outputs.releases_created == 'true'
+        env:
+          RELEASES: ${{ steps.release-plz.outputs.releases }}
+          RELEASES_CREATED: ${{ steps.release-plz.outputs.releases_created }}
+        run: |
+          set -e
+          # access the first release with jq
+          release_version=$(echo "$RELEASES" | jq -r '.[0].version')
+          echo "release_version: $release_version"
+          # Build WASM package with the correct version
+          nix develop --command just build-wasm
+          # Update package.json version in the generated pkg directory
+          cd pkg
+          npm version "$release_version" --no-git-tag-version
+
+      - name: Setup Node.js
+        if: steps.release-plz.outputs.releases_created == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish to npm
+        if: steps.release-plz.outputs.releases_created == 'true'
+        run: |
+          cd pkg
+          npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

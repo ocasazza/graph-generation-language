@@ -80,6 +80,9 @@
 //! * [`rules`] - Transformation rule engine for graph manipulation
 
 use std::collections::HashMap;
+
+// Use cfg(target_arch = "wasm32") instead of cfg(feature = "wasm") for wasm-pack compatibility
+#[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 
 pub mod generators;
@@ -91,13 +94,41 @@ use crate::generators::get_generator;
 use crate::parser::{parse_ggl, GGLStatement};
 use crate::types::{Edge, Graph, Node};
 
+// ! info: this is how you reference external functions from JS / the browser
+// #[cfg(target_arch = "wasm32")]
+// #[wasm_bindgen]
+// extern "C" {
+//     fn alert(s: &str);
+// }
+
+// ! info: this is how you export a function / interface / struct / etc to wasm
+// #[cfg(target_arch = "wasm32")]
+// #[wasm_bindgen]
+// pub fn greet() {
+//     alert("Hello, foobar!");
+// }
+
 /// Sets up panic hook for better error reporting in WebAssembly environments.
 ///
 /// This function should be called once when initializing the WASM module to ensure
 /// that panics are properly reported to the JavaScript console.
-#[wasm_bindgen]
 pub fn set_panic_hook() {
+    // When the `console_error_panic_hook` feature is enabled, we can call the
+    // `set_panic_hook` function at least once during initialization, and then
+    // we will get better error messages if our code ever panics.
+    //
+    // For more details see
+    // https://github.com/rustwasm/console_error_panic_hook#readme
+    #[cfg(feature = "console_error_panic_hook")]
     console_error_panic_hook::set_once();
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(start)]
+pub fn run() {
+    // Set up panic hook for better error reporting
+    console_error_panic_hook::set_once();
+    println!("🚀 Graph Generation Language WASM module loaded!");
 }
 
 /// The main GGL engine for parsing and executing GGL programs.
@@ -119,10 +150,10 @@ pub fn set_panic_hook() {
 ///     }
 /// "#;
 ///
-/// let result = engine.generate_from_ggl_native(ggl_code).unwrap();
+/// let result = engine.generate_from_ggl(ggl_code).unwrap();
 /// println!("Generated graph: {}", result);
 /// ```
-#[wasm_bindgen]
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 pub struct GGLEngine {
     graph: Graph,
     rules: HashMap<String, rules::Rule>,
@@ -134,7 +165,8 @@ impl Default for GGLEngine {
     }
 }
 
-#[wasm_bindgen]
+// Unified implementation for both WASM and native usage
+#[cfg_attr(target_arch = "wasm32", wasm_bindgen)]
 impl GGLEngine {
     /// Creates a new GGL engine with an empty graph and no rules.
     ///
@@ -145,7 +177,7 @@ impl GGLEngine {
     ///
     /// let engine = GGLEngine::new();
     /// ```
-    #[wasm_bindgen(constructor)]
+    #[cfg_attr(target_arch = "wasm32", wasm_bindgen(constructor))]
     pub fn new() -> Self {
         GGLEngine {
             graph: Graph::new(),
@@ -155,8 +187,8 @@ impl GGLEngine {
 
     /// Parses and executes a GGL program, returning the resulting graph as JSON.
     ///
-    /// This is the WebAssembly-compatible version that returns JavaScript-compatible
-    /// error types. For native Rust usage, prefer [`generate_from_ggl_native`].
+    /// This method works for both WebAssembly and native Rust usage.
+    /// When used in WASM, errors are automatically converted to JavaScript-compatible types.
     ///
     /// # Arguments
     ///
@@ -166,10 +198,29 @@ impl GGLEngine {
     ///
     /// Returns a `Result` containing either:
     /// - `Ok(String)` - JSON representation of the generated graph
-    /// - `Err(JsValue)` - Error message wrapped for JavaScript compatibility
+    /// - `Err(JsValue)` - Error message (WASM) or `Err(String)` (native)
     ///
     /// # Examples
     ///
+    /// ```rust
+    /// use graph_generation_language::GGLEngine;
+    ///
+    /// let mut engine = GGLEngine::new();
+    /// let ggl_code = r#"
+    ///     graph simple {
+    ///         node a;
+    ///         node b;
+    ///         edge: a -- b;
+    ///     }
+    /// "#;
+    ///
+    /// match engine.generate_from_ggl(ggl_code) {
+    ///     Ok(json) => println!("Generated graph: {}", json),
+    ///     Err(e) => eprintln!("Error: {:?}", e),
+    /// }
+    /// ```
+    ///
+    /// JavaScript usage:
     /// ```javascript
     /// const engine = new GGLEngine();
     /// const gglCode = `
@@ -187,62 +238,24 @@ impl GGLEngine {
     ///     console.error("Error:", error);
     /// }
     /// ```
-    ///
-    /// [`generate_from_ggl_native`]: #method.generate_from_ggl_native
+    #[cfg(target_arch = "wasm32")]
     pub fn generate_from_ggl(&mut self, ggl_code: &str) -> Result<String, JsValue> {
         self.generate_from_ggl_native(ggl_code)
             .map_err(|e| JsValue::from_str(&e))
     }
-}
 
-/// Native implementation for testing and non-WASM usage
-impl GGLEngine {
     /// Parses and executes a GGL program, returning the resulting graph as JSON.
     ///
-    /// This is the native Rust version that returns standard Rust error types.
-    /// For WebAssembly usage, use [`generate_from_ggl`] instead.
+    /// This is the native version that returns standard Rust error types.
+    #[cfg(not(target_arch = "wasm32"))]
+    pub fn generate_from_ggl(&mut self, ggl_code: &str) -> Result<String, String> {
+        self.generate_from_ggl_native(ggl_code)
+    }
+
+    /// Internal implementation for parsing and executing GGL programs.
     ///
-    /// # Arguments
-    ///
-    /// * `ggl_code` - A string containing the GGL program to execute
-    ///
-    /// # Returns
-    ///
-    /// Returns a `Result` containing either:
-    /// - `Ok(String)` - JSON representation of the generated graph
-    /// - `Err(String)` - Error message describing what went wrong
-    ///
-    /// # Examples
-    ///
-    /// ```rust
-    /// use graph_generation_language::GGLEngine;
-    ///
-    /// let mut engine = GGLEngine::new();
-    /// let ggl_code = r#"
-    ///     graph social_network {
-    ///         node alice :person [name="Alice", age=30];
-    ///         node bob :person [name="Bob", age=25];
-    ///         edge friendship: alice -- bob [strength=0.8];
-    ///
-    ///         generate complete {
-    ///             nodes: 3;
-    ///             prefix: "user";
-    ///         }
-    ///
-    ///         rule add_metadata {
-    ///             lhs { node N :person; }
-    ///             rhs { node N :person [active=true]; }
-    ///         }
-    ///
-    ///         apply add_metadata 5 times;
-    ///     }
-    /// "#;
-    ///
-    /// match engine.generate_from_ggl_native(ggl_code) {
-    ///     Ok(json) => println!("Generated graph: {}", json),
-    ///     Err(e) => eprintln!("Error: {}", e),
-    /// }
-    /// ```
+    /// This method contains the core logic and is used by both the WASM and native
+    /// versions of `generate_from_ggl`.
     ///
     /// # Processing Steps
     ///
@@ -265,9 +278,7 @@ impl GGLEngine {
     /// - **Generator errors**: Invalid generator parameters or unknown generators
     /// - **Rule errors**: Pattern matching failures or transformation errors
     /// - **Serialization errors**: JSON conversion failures
-    ///
-    /// [`generate_from_ggl`]: #method.generate_from_ggl
-    pub fn generate_from_ggl_native(&mut self, ggl_code: &str) -> Result<String, String> {
+    fn generate_from_ggl_native(&mut self, ggl_code: &str) -> Result<String, String> {
         // Parse GGL code
         let statements = parse_ggl(ggl_code).map_err(|e| format!("Parse error: {}", e))?;
 
@@ -329,10 +340,4 @@ impl GGLEngine {
         // Serialize final graph to JSON
         serde_json::to_string(&self.graph).map_err(|e| format!("Serialization error: {}", e))
     }
-}
-
-// Initialize panic hook
-#[wasm_bindgen(start)]
-pub fn main() {
-    set_panic_hook();
 }

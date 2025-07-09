@@ -1,5 +1,5 @@
 default:
-    @just --list
+    just --list
 
 # Run pre-commit hooks on all files, including autoformatting
 pre-commit-all:
@@ -11,7 +11,7 @@ run *ARGS:
 
 # Run 'bacon' to run the project (auto-recompiles)
 watch *ARGS:
-	bacon --job run -- -- {{ ARGS }}
+    bacon --job run -- -- {{ ARGS }}
 
 # Run all tests
 test *ARGS:
@@ -28,3 +28,16 @@ test-file FILE *ARGS:
 # Run tests with coverage
 test-coverage:
     cargo test --all-features
+
+# build
+build:
+    cargo build --profile release
+
+# Build WASM for production with Trunk
+build-wasm:
+    wasm-pack build --target web
+
+# Clean Trunk build artifacts
+clean:
+    cd examples/trunk && trunk clean
+    rm -rf examples/trunk/dist examples/trunk/target dist pkg

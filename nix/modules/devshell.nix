@@ -19,7 +19,21 @@
           just
           nixd # Nix language server
           bacon
+          # WASM development tools
+          trunk # Modern WASM bundler and dev server
+          rustup # Need rustup to install WASM target
+          # Browser testing tools
+          chromedriver
+          geckodriver
+          wasm-pack
         ];
+        shellHook = ''
+          # Install WASM target if not already installed
+          if ! rustup target list --installed | grep -q wasm32-unknown-unknown; then
+            echo "Installing wasm32-unknown-unknown target..."
+            rustup target add wasm32-unknown-unknown
+          fi
+        '';
       };
     };
 }
