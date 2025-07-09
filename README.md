@@ -17,6 +17,23 @@ st suites including parser, generator, rule, and integration tests.
 
 ## Quick Start
 
+### Commands
+
+We also provide a [`justfile`](https://just.systems/) for Makefile'esque commands to be run inside of the devShell.
+
+```zsh
+❯ just
+Available recipes:
+    default
+    pre-commit-all       # Run pre-commit hooks on all files, including autoformatting
+    run *ARGS            # Run 'cargo run' on the project
+    test *ARGS           # Run all tests
+    test-coverage        # Run tests with coverage
+    test-file FILE *ARGS # Run specific test file
+    test-watch *ARGS     # Run tests with bacon (auto-recompiles and re-runs tests)
+    watch *ARGS          # Run 'bacon' to run the project (auto-recompiles)
+```
+
 ### Installation
 
 #### Option 1: Using Nix Flake (Recommended)
@@ -43,20 +60,6 @@ nix develop -c cargo run
 nix build
 ```
 
-We also provide a [`justfile`](https://just.systems/) for Makefile'esque commands to be run inside of the devShell.
-
-```zsh
-❯ just
-Available recipes:
-    default
-    pre-commit-all       # Run pre-commit hooks on all files, including autoformatting
-    run *ARGS            # Run 'cargo run' on the project
-    test *ARGS           # Run all tests
-    test-coverage        # Run tests with coverage
-    test-file FILE *ARGS # Run specific test file
-    test-watch *ARGS     # Run tests with bacon (auto-recompiles and re-runs tests)
-    watch *ARGS          # Run 'bacon' to run the project (auto-recompiles)
-```
 
 #### Option 2: Manual Installation
 
