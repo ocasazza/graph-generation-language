@@ -6,19 +6,27 @@ on:
 jobs:
   ci:
     runs-on: ${{ matrix.os }}
-    # simple strategy for this workflow, we run this on all branches [except main]
-    # see release for the full release testing matrix
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-14]
+        os:
+        - ubuntu-latest
+        # - ubuntu-24.04
+        # - ubuntu-22.04
+        # - ubuntu-22.04-arm
+        # - ubuntu-24.04-arm
+        - macos-latest
+        # - macos-14
+        # - macos-15
+        # - macos-13
+        # - windows-latest
+        # - windows-2025
+        # - windows-2022
+        # - windows-11-arm
     steps:
       - uses: actions/checkout@v4
       - uses: DeterminateSystems/nix-installer-action@main
       - name: Install omnix
         run: nix --accept-flake-config profile install "github:juspay/omnix"
       - run: om ci
-      # test WASM build on Ubuntu only to avoid redundancy
-      # todo: we might be able to just integrate this in with om ci
-      - name: Test WASM Demo
-        run: |
-          nix develop --command just build-wasm
+      - run: nix develop -c "wasm-pack test --target web"
+      - run: nix develop -c "wasm-pack build --target web"
