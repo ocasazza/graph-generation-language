@@ -30,9 +30,7 @@ jobs:
       - name: Install omnix
         run: nix --accept-flake-config profile install "github:juspay/omnix"
       - run: om ci
-      - run: nix develop -c "wasm-pack test --target web"
-      - run: nix develop -c "wasm-pack build --target web"
-
+      - run: nix develop -c "just build-wasm"
 
   pages:
     needs: ci
