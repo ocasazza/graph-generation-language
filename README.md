@@ -127,8 +127,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - Built with [Rust](https://www.rust-lang.org/) and [Pest](https://pest.rs/) parser
-- Inspired by graph rewriting systems and domain-specific languages
-- Supports common graph algorithms and network analysis patterns
-
 - [Zulip](https://nixos.zulipchat.com/#narrow/stream/413950-nix)
 - [nixos.wiki: Packaging Rust projects with nix](https://nixos.wiki/wiki/Rust#Packaging_Rust_projects_with_nix)
