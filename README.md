@@ -1,11 +1,9 @@
-
 # Graph Generation Language (GGL)
 
 A domain-specific language for creating and manipulating graphs through declarative syntax. GGL allows you to define graph structures, generate common graph topologies, and apply transformation rules to evolve graphs over time.
 st suites including parser, generator, rule, and integration tests.
 
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://ocasazza.github.io/graph-generation-language/)
-
 
 ## Features
 
@@ -48,7 +46,6 @@ direnv allow  # This will automatically set up the development environment
 
 This repo uses [Flakes](https://nixos.asia/en/flakes) from the get-go.
 
-
 ```bash
 # Dev shell
 nix develop
@@ -60,7 +57,6 @@ nix develop -c cargo run
 nix build
 ```
 
-
 #### Option 2: Manual Installation
 
 ```bash
@@ -69,10 +65,13 @@ cd graph-generation-language
 cargo build --release
 ```
 
-For documentation building, you'll also need:
+For documentation building:
+
 ```bash
-pip install -r docs/requirements.txt
+cargo doc --document-private-items --package graph_generation_language --all-features
 ```
+
+Once built, these docs can be viewed locally at `./graph-generation-language/target/doc/graph_generation_language/index.html`
 
 ### Basic Example
 
