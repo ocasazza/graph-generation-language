@@ -6,35 +6,35 @@ on:
     branches: ['main']
 
 jobs:
-  ci:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          # - ubuntu-24.04
-          # - ubuntu-22.04
-          # - ubuntu-22.04-arm
-          # - ubuntu-24.04-arm
-          - macos-latest
-        # - macos-14
-        # - macos-15
-        # - macos-13
-        # - windows-latest
-        # - windows-2025
-        # - windows-2022
-        # - windows-11-arm
-    steps:
-      - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@main
-      - name: Install omnix
-        run: nix --accept-flake-config profile install "github:juspay/omnix"
-      - run: om ci
-      - run: nix develop --command just build-wasm
+  # ci:
+  #   runs-on: ${{ matrix.os }}
+  #   strategy:
+  #     matrix:
+  #       os:
+  #         - ubuntu-latest
+  #         # - ubuntu-24.04
+  #         # - ubuntu-22.04
+  #         # - ubuntu-22.04-arm
+  #         # - ubuntu-24.04-arm
+  #         - macos-latest
+  #       # - macos-14
+  #       # - macos-15
+  #       # - macos-13
+  #       # - windows-latest
+  #       # - windows-2025
+  #       # - windows-2022
+  #       # - windows-11-arm
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: DeterminateSystems/nix-installer-action@main
+  #     - name: Install omnix
+  #       run: nix --accept-flake-config profile install "github:juspay/omnix"
+  #     - run: om ci
+  #     - run: nix develop --command just build-wasm
 
   pages:
-    needs: ci
-    if: ${{ needs.ci.result == 'success' }}
+    # needs: ci
+    # if: ${{ needs.ci.result == 'success' }}
     permissions:
       pages: write
       id-token: write
@@ -87,77 +87,77 @@ jobs:
         uses: actions/deploy-pages@v4
 
   # Create release PR with version updates and changelog
-  release-pr:
-    needs: ci
-    if: ${{ needs.ci.result == 'success' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      actions: write
+  # release-pr:
+  #   needs: ci
+  #   if: ${{ needs.ci.result == 'success' }}
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #     pull-requests: write
+  #     actions: write
 
-    concurrency:
-      group: release-plz-${{ github.ref }}
-      cancel-in-progress: false
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  #   concurrency:
+  #     group: release-plz-${{ github.ref }}
+  #     cancel-in-progress: false
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      - uses: DeterminateSystems/nix-installer-action@main
+  #     - uses: DeterminateSystems/nix-installer-action@main
 
-      - name: Run release-plz
-        uses: release-plz/action@v0.5
-        with:
-          command: release-pr
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+  #     - name: Run release-plz
+  #       uses: release-plz/action@v0.5
+  #       with:
+  #         command: release-pr
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+  #         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-  # Release unpublished packages
-  release:
-    needs: ci
-    if: ${{ needs.ci.result == 'success' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      actions: write
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+  # # Release unpublished packages
+  # release:
+  #   needs: ci
+  #   if: ${{ needs.ci.result == 'success' }}
+  #   runs-on: ubuntu-latest
+  #   permissions:
+  #     contents: write
+  #     pull-requests: write
+  #     actions: write
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+  #       with:
+  #         fetch-depth: 0
 
-      - uses: DeterminateSystems/nix-installer-action@main
+  #     - uses: DeterminateSystems/nix-installer-action@main
 
-      # test WASM build on Ubuntu only to avoid redundancy
-      # todo: we might be able to just integrate this in with om ci
-      - name: Test WASM Demo
-        run: |
-          nix develop --command just build-wasm
+  #     # test WASM build on Ubuntu only to avoid redundancy
+  #     # todo: we might be able to just integrate this in with om ci
+  #     - name: Test WASM Demo
+  #       run: |
+  #         nix develop --command just build-wasm
 
-      - name: Setup Node.js
-        if: steps.release-plz.outputs.releases_created == 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          registry-url: 'https://registry.npmjs.org'
+  #     - name: Setup Node.js
+  #       if: steps.release-plz.outputs.releases_created == 'true'
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: '20'
+  #         registry-url: 'https://registry.npmjs.org'
 
-      - name: Publish to npm
-        if: steps.release-plz.outputs.releases_created == 'true'
-        run: |
-          cd pkg
-          npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  #     - name: Publish to npm
+  #       if: steps.release-plz.outputs.releases_created == 'true'
+  #       run: |
+  #         cd pkg
+  #         npm publish
+  #       env:
+  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Run release-plz
-        id: release-plz
-        uses: release-plz/action@v0.5
-        with:
-          command: release
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+  #     - name: Run release-plz
+  #       id: release-plz
+  #       uses: release-plz/action@v0.5
+  #       with:
+  #         command: release
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN }}
+  #         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
