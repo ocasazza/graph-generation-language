@@ -64,7 +64,7 @@ jobs:
       - name: Build WASM demo
         run: |
           cd examples/trunk
-          trunk build --release
+          nix develop --command trunk build --release
 
       - name: Prepare GitHub Pages content
         run: |
