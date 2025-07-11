@@ -26,6 +26,7 @@
           chromedriver
           geckodriver
           wasm-pack
+          nodejs
         ];
         shellHook = ''
           # Install WASM target if not already installed

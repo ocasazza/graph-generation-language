@@ -1,9 +1,9 @@
-name: "Release"
+name: 'Release'
 on:
   pull_request:
-    branches: ["main"]
+    branches: ['main']
   push:
-    branches: ["main"]
+    branches: ['main']
 
 jobs:
   ci:
@@ -11,12 +11,12 @@ jobs:
     strategy:
       matrix:
         os:
-        - ubuntu-latest
-        # - ubuntu-24.04
-        # - ubuntu-22.04
-        # - ubuntu-22.04-arm
-        # - ubuntu-24.04-arm
-        - macos-latest
+          - ubuntu-latest
+          # - ubuntu-24.04
+          # - ubuntu-22.04
+          # - ubuntu-22.04-arm
+          # - ubuntu-24.04-arm
+          - macos-latest
         # - macos-14
         # - macos-15
         # - macos-13
@@ -121,7 +121,7 @@ jobs:
     if: ${{ needs.ci.result == 'success' }}
     runs-on: ubuntu-latest
     permissions:
-      contents: "write"
+      contents: 'write'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -172,6 +172,6 @@ jobs:
         if: steps.release-plz.outputs.releases_created == 'true'
         run: |
           cd pkg
-          npm publish --access public
+          npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
