@@ -34,7 +34,7 @@ jobs:
 
   pages:
     needs: ci
-    if: ${{ needs.ci.result == 'success' && github.event_name == 'pull_request' }}
+    if: ${{ needs.ci.result == 'success' }}
     permissions:
       pages: write
       id-token: write
